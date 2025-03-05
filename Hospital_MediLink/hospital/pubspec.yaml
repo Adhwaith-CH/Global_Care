@@ -20,6 +20,10 @@ dependencies:
   vibration:  ^3.0.0
   fl_chart:  ^0.70.2
   file_picker: ^8.1.7
+  permission_handler: ^11.3.1
+  dio: ^5.8.0+1
+  path_provider: ^2.1.5
+  open_file: ^3.5.10
 
 dev_dependencies:
   flutter_test:

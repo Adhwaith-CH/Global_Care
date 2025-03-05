@@ -84,8 +84,7 @@ class _AdminHomeState extends State<AdminHome> {
           // Main Content
           Expanded(
             flex: 5,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            child: ListView(
               children: [
                 AppHeader(heading: heading,),
                 _pages[_selectedIndex],

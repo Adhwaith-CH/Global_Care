@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:loginpage/main.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -8,13 +10,60 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
+  bool isLoading = true;
   String selectedOption = ''; // Track the selected option
+  String Name = "";
+   String Contact = "";
+   String Address = "";
+   String Gender = "";
+   String Dob = "";
+   String Place = "";
+   String District = "";
+  String Email = "";
+  
+   
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    fetchProfileData();
+  }
+
+  Future<void> fetchProfileData() async {
+    try {
+      final doctor_id = supabase.auth.currentUser!.id;
+
+      if (doctor_id == null) {
+        print('User not logged in');
+        return;
+      }
+
+      final response = await supabase
+          .from('tbl_doctor') // Your Supabase table name
+          .select('*,tbl_place("*",tbl_district(*))') // Columns to fetch
+          .eq('doctor_id', doctor_id) // Fetch only the logged-in user’s data
+          .single(); // Get only one record
+      setState(() {
+        Name = response['doctor_name'] ?? 'No Name';
+        Email = response['doctor_email'] ?? 'No Name';
+        Contact = response['doctor_contact'] ?? 'No Name';
+        Address = response['doctor_address'] ?? 'No Name';
+        Gender = response['doctor_gender'] ?? 'No Name';
+        Dob = response['doctor_dob'] ?? 'No Name';
+        Place = response['tbl_place']['place_name'] ?? 'No Name';
+        District = response['tbl_place']['tbl_district']['district_name'] ?? 'No Name';
+        isLoading=false;
+      });
+    } catch (error) {
+      print('Error fetching profile data: $error');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-
+      appBar: AppBar(automaticallyImplyLeading: false,
         //title: Text('Profile'),
         backgroundColor: const Color.fromARGB(255, 253, 253, 254),
         actions: [
@@ -39,7 +88,8 @@ class _ProfileState extends State<Profile> {
                 value: 'history',
                 child: Row(
                   children: [
-                    Icon(Icons.history, color: Color.fromARGB(255, 37, 99, 160)),
+                    Icon(Icons.history,
+                        color: Color.fromARGB(255, 37, 99, 160)),
                     SizedBox(width: 10),
                     Text('View History'),
                   ],
@@ -59,7 +109,8 @@ class _ProfileState extends State<Profile> {
                 value: 'Logout',
                 child: Row(
                   children: [
-                    Icon(Icons.exit_to_app, color: Color.fromARGB(255, 37, 99, 160)),
+                    Icon(Icons.exit_to_app,
+                        color: Color.fromARGB(255, 37, 99, 160)),
                     SizedBox(width: 10),
                     Text('Logout'),
                   ],
@@ -68,9 +119,10 @@ class _ProfileState extends State<Profile> {
             ],
           ),
         ],
-        
       ),
-      body: Container(
+      body:
+        isLoading ? Center(child: CircularProgressIndicator(),) :      
+       Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [Colors.blue.shade50, Colors.blue.shade50],
@@ -88,7 +140,8 @@ class _ProfileState extends State<Profile> {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: const Color.fromARGB(255, 253, 253, 254),
-                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(50)),
+                  borderRadius:
+                      BorderRadius.vertical(bottom: Radius.circular(50)),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.2),
@@ -107,7 +160,7 @@ class _ProfileState extends State<Profile> {
                     ),
                     SizedBox(height: 20),
                     Text(
-                      'John Doe',
+                      Name,
                       style: TextStyle(
                         fontSize: 36,
                         fontWeight: FontWeight.bold,
@@ -143,13 +196,13 @@ class _ProfileState extends State<Profile> {
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Column(
                   children: [
-                    _buildDetailCard('Email', 'user@example.com', Icons.email),
-                    _buildDetailCard('Contact', '+1 234 567 890', Icons.phone),
-                    _buildDetailCard('Address', '123 Main Street, City, Country', Icons.location_on),
-                    _buildDetailCard('Gender', 'Male', Icons.person),
-                    _buildDetailCard('Date of Birth', '01 Jan 1990', Icons.cake),
-                    _buildDetailCard('Place', 'Hometown', Icons.home),
-                    _buildDetailCard('District', 'District Name', Icons.map),
+                    _buildDetailCard('Email', Email, Icons.email),
+                    _buildDetailCard('Contact',Contact, Icons.phone),
+                    _buildDetailCard('Address',Address, Icons.location_on),
+                    _buildDetailCard('Gender', Gender, Icons.person),
+                    _buildDetailCard('Date of Birth', Dob, Icons.cake),
+                    _buildDetailCard('Place', Place, Icons.home),
+                    _buildDetailCard('District', District, Icons.map),
                   ],
                 ),
               ),
@@ -207,7 +260,9 @@ class _ProfileState extends State<Profile> {
         leading: Icon(icon, color: Color.fromARGB(255, 37, 99, 160)),
         title: Text(
           title,
-          style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 37, 99, 160)),
+          style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color.fromARGB(255, 37, 99, 160)),
         ),
         subtitle: Text(
           value,

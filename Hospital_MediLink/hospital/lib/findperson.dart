@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hospital/findglobalid.dart';
 import 'package:hospital/fingerprint.dart';
 
 class SearchOptionScreen extends StatelessWidget {
@@ -10,7 +11,7 @@ class SearchOptionScreen extends StatelessWidget {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.blue.shade300, Colors.blue.shade100],
+            colors: [Color(0xFF0277BD), Color(0xFF0277BD)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -28,7 +29,7 @@ class SearchOptionScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 32, // Larger font size for heading
                     fontWeight: FontWeight.bold,
-                    color: Color.fromARGB(255, 37, 99, 160),
+                    color: Color.fromARGB(255, 240, 240, 241),
                     shadows: [
                       Shadow(color: Colors.black.withOpacity(0.2), offset: Offset(2, 2), blurRadius: 4)
                     ],
@@ -47,7 +48,7 @@ class SearchOptionScreen extends StatelessWidget {
                         // Navigate to Finduser page (using Global ID)
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const Finduser(searchMethod: 'Global ID')),
+                          MaterialPageRoute(builder: (context) =>  GlobalIDSearch()),
                         );
                       },
                       child: Container(
@@ -150,28 +151,12 @@ class SearchOptionScreen extends StatelessWidget {
         onPressed: () {
           // Optional: Any additional action or screen transition
         },
-        child: Icon(Icons.help_outline),
         backgroundColor: Color.fromARGB(255, 37, 99, 160),
+        child: Icon(Icons.help_outline),
       ),
     );
   }
 }
 
-class Finduser extends StatelessWidget {
-  final String searchMethod;
-
-  const Finduser({super.key, required this.searchMethod});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.blue.shade200,
-        title: Text("Find User - $searchMethod", style: TextStyle(color: Colors.white)),
-      ),
-      body: Center(
-        child: Text('Searching user by: $searchMethod'),
-      ),
-    );
-  }
-}
+ 
+ 

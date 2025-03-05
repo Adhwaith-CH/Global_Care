@@ -1,7 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
-import 'package:loginpage/ViewAppointment.dart';
 import 'package:loginpage/finduser.dart';
 import 'package:loginpage/profile.dart';
 
@@ -24,17 +22,12 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     Profile(),
   ];
 
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          '',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        backgroundColor: Color.fromARGB(255, 37, 99, 160), // Emerald Green for professionalism
-      ),
+      appBar: null,
       body: _pages[_selectedIndex],
       bottomNavigationBar: CurvedNavigationBar(
         index: _selectedIndex,
@@ -71,8 +64,7 @@ class _HomePageContentState extends State<HomePageContent> {
 
   @override
   Widget build(BuildContext context) {
-    return  Scaffold(
-      body: Container(
+    return  Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [Colors.blue.shade50, Colors.blue.shade50],
@@ -153,8 +145,7 @@ class _HomePageContentState extends State<HomePageContent> {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildHeader() {

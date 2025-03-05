@@ -30,6 +30,11 @@ class _LoginpageState extends State<Loginpage> {
     }
   }
 
+
+
+
+  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,7 +45,7 @@ class _LoginpageState extends State<Loginpage> {
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.teal.shade400, Colors.teal.shade800],
+                  colors: [ Color.fromARGB(255, 69, 130, 191), Colors.blue.shade50],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
@@ -57,13 +62,13 @@ class _LoginpageState extends State<Loginpage> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
-                    colors: [Colors.teal.shade300, Colors.teal.shade700],
+                    colors: [Color.fromARGB(255, 74, 132, 190), Color.fromARGB(255, 74, 132, 190)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.teal.shade700.withOpacity(0.5),
+                      color: Color.fromARGB(255, 74, 132, 190),
                       blurRadius: 15,
                       offset: Offset(0, 4),
                     ),
@@ -80,13 +85,13 @@ class _LoginpageState extends State<Loginpage> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
-                    colors: [Colors.teal.shade600, Colors.teal.shade800],
+                    colors: [Colors.blue.shade50, const Color.fromARGB(255, 167, 210, 240)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.teal.shade900.withOpacity(0.5),
+                      color: Colors.blue.shade50,
                       blurRadius: 15,
                       offset: Offset(0, 4),
                     ),
@@ -118,11 +123,11 @@ class _LoginpageState extends State<Loginpage> {
                       children: [
                         // Login Heading
                         Text(
-                          "Welcome Back!",
+                          "It’s Time to Log In!",
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
-                            color: Colors.teal.shade700,
+                            color: Color.fromARGB(255, 37, 99, 160),
                           ),
                         ),
                         SizedBox(height: 10),
@@ -140,15 +145,15 @@ class _LoginpageState extends State<Loginpage> {
                           controller: _emailEditingController,
                           decoration: InputDecoration(
                             labelText: 'Email',
-                            labelStyle: TextStyle(color: Colors.teal),
+                            labelStyle: TextStyle(color:Color.fromARGB(255, 37, 99, 160)),
                             border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(30.0)),
-                            prefixIcon: Icon(Icons.email, color: Colors.teal),
+                            prefixIcon: Icon(Icons.email, color: Color.fromARGB(255, 37, 99, 160)),
                             contentPadding: EdgeInsets.fromLTRB(
                                 20.0, 15.0, 20.0, 15.0),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30.0),
-                              borderSide: BorderSide(color: Colors.teal),
+                              borderSide: BorderSide(color: Color.fromARGB(255, 37, 99, 160)),
                             ),
                           ),
                         ),
@@ -160,10 +165,10 @@ class _LoginpageState extends State<Loginpage> {
                           obscureText: true,
                           decoration: InputDecoration(
                             labelText: 'Password',
-                            labelStyle: TextStyle(color: Colors.teal),
+                            labelStyle: TextStyle(color: Color.fromARGB(255, 37, 99, 160)),
                             border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(30.0)),
-                            prefixIcon: Icon(Icons.lock, color: Colors.teal),
+                            prefixIcon: Icon(Icons.lock, color:Color.fromARGB(255, 37, 99, 160)),
                             contentPadding: EdgeInsets.fromLTRB(
                                 20.0, 15.0, 20.0, 15.0),
                             focusedBorder: OutlineInputBorder(
@@ -187,7 +192,7 @@ class _LoginpageState extends State<Loginpage> {
                             },
                             child: Text(
                               "Forgot Password?",
-                              style: TextStyle(color: Colors.teal),
+                              style: TextStyle(color: Color.fromARGB(255, 37, 99, 160)),
                             ),
                           ),
                         ),
@@ -199,14 +204,14 @@ class _LoginpageState extends State<Loginpage> {
                             signIn();
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.teal,
+                            backgroundColor: Color.fromARGB(255, 37, 99, 160),
                             padding: EdgeInsets.symmetric(
                                 horizontal: 50, vertical: 15),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(30),
                             ),
                             elevation: 5,
-                            shadowColor: Colors.teal.shade700,
+                            shadowColor: Color.fromARGB(255, 37, 99, 160),
                           ),
                           child: Text(
                             'Login',
@@ -237,7 +242,7 @@ class _LoginpageState extends State<Loginpage> {
                               },
                               child: Text(
                                 "Sign Up",
-                                style: TextStyle(color: Colors.teal),
+                                style: TextStyle(color:Color.fromARGB(255, 37, 99, 160)),
                               ),
                             ),
                           ],

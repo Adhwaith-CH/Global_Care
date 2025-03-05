@@ -107,7 +107,7 @@ class _RegistrationState extends State<Registration> {
     try {
       final response =
           await supabase.from('tbl_place').select().eq('district_id', selectedDistrict);
-          print(response);
+          // print(response);
       setState(() {
         placelist = response;
       });
@@ -165,6 +165,8 @@ class _RegistrationState extends State<Registration> {
         );
       }
     } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error:$e")));
+
       print('Sign up failed: $e');
     }
   }
@@ -346,7 +348,7 @@ class _RegistrationState extends State<Registration> {
           decoration: const InputDecoration(
            
             hintText: 'District',
-            prefixIcon: Icon(Icons.abc_outlined, color: Color(0xFF0D47A1)),
+            prefixIcon: Icon(Icons.location_city, color: Color(0xFF0D47A1)),
         
         filled: true,
         fillColor: Color(0xFFF5F5F5),
@@ -385,8 +387,12 @@ class _RegistrationState extends State<Registration> {
         DropdownButtonFormField<String>(
           decoration: const InputDecoration(
             hintText: 'Place',
+            prefixIcon: Icon(Icons.location_pin, color: Color(0xFF0D47A1)),
+            filled: true,
             fillColor: Color(0xFFF5F5F5),
-            border: OutlineInputBorder(),
+            border: OutlineInputBorder(
+              borderSide: BorderSide.none,
+            ),
           ),
           value: selectedPlace, //initilizee cheyunuu
           validator: (value) {
@@ -401,6 +407,7 @@ class _RegistrationState extends State<Registration> {
             setState(() {
               selectedPlace =
                   newValue; //"newValue" ill ulla value "selectedDistrict"leeku store cheyunuu
+                print(selectedPlace);
             });
           },
           items: placelist.map((place) {

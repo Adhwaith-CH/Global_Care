@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:hospital/adddepartment.dart';
-import 'package:hospital/adddoctor.dart';
 import 'package:hospital/homepage.dart';
 import 'package:hospital/hospitallogin.dart';
-import 'package:hospital/hospitalregisteration.dart';
 import 'package:hospital/splashscreen.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> main() async {
@@ -24,7 +22,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: SplashScreen()
+      home: Hospitallogin()
     );
   }
 }

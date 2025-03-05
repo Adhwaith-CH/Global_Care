@@ -185,7 +185,6 @@ class _FingerprintRecognitionScreenState
                         _speak("Please place your finger on the scanner.");
                       });
                     },
-                    child: Text("Retry"),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue.shade400,
                       shape: RoundedRectangleBorder(
@@ -194,6 +193,7 @@ class _FingerprintRecognitionScreenState
                       padding: EdgeInsets.symmetric(vertical: 15),
                       textStyle: TextStyle(fontSize: 18),
                     ),
+                    child: Text("Retry"),
                   ),
                 ),
               ),

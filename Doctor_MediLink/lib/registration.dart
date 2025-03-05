@@ -1,8 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:loginpage/loginpage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -28,7 +29,12 @@ class _RegisterState extends State<Register> {
   String? selectedDistrict;
   String? selectedPlace;
   File? _image;
-  final ImagePicker picker = ImagePicker();
+  File? _proof;
+  final ImagePicker _picker = ImagePicker();
+
+  String _hintText = "Proof"; // Default hint text
+  Color _iconColor = Color(0xFF0D47A1); // Default icon color (blue)
+  bool _showGenderOptions = false;
 
   @override
   void initState() {
@@ -49,7 +55,10 @@ class _RegisterState extends State<Register> {
 
   Future<void> fetchPlace(String selectedDistrict) async {
     try {
-      final response = await supabase.from('tbl_place').select().eq('district_id', selectedDistrict);
+      final response = await supabase
+          .from('tbl_place')
+          .select()
+          .eq('district_id', selectedDistrict);
       setState(() {
         placelist = List<Map<String, dynamic>>.from(response);
       });
@@ -58,11 +67,26 @@ class _RegisterState extends State<Register> {
     }
   }
 
-  Future<void> pickImage() async {
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
+  Future<void> _pickImage() async {
+    if (await Permission.photos.request().isGranted) {
+      final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        setState(() {
+          _image = File(pickedFile.path);
+        });
+      }
+    } else {
+      // Show a message to the user
+    }
+  }
+
+  Future<void> _pickproof() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null && pickedFile.path.isNotEmpty) {
       setState(() {
-        _image = File(pickedFile.path);
+        _proof = File(pickedFile.path);
+        _hintText = pickedFile.name; // Update hintText with file name
+        _iconColor = Colors.green; // Change icon color to green
       });
     }
   }
@@ -74,13 +98,13 @@ class _RegisterState extends State<Register> {
         password: password.text,
       );
 
-      if (response.user != null) {
-        String fullName = fullname.text;
-        String firstName = fullName.split(' ').first;
-        await supabase.auth.updateUser(UserAttributes(
-          data: {'display_name': firstName},
-        ));
-      }
+      // if (response.user != null) {
+      //   String fullName = fullname.text;
+      //   String firstName = fullName.split(' ').first;
+      //   await supabase.auth.updateUser(UserAttributes(
+      //     data: {'display_name': firstName},
+      //   ));
+      // }
 
       final User? user = response.user;
 
@@ -91,20 +115,29 @@ class _RegisterState extends State<Register> {
 
         String? photoUrl;
         if (_image != null) {
-          photoUrl = await _uploadImage(_image!, userId);
+          photoUrl = await _uploadImage(_image!, userId, 'photo');
         }
 
-        await supabase.from('tbl_user').insert({
-          'user_id': userId,
-          'user_name': fullname.text,
-          'user_email': email.text,
-          'user_photo': photoUrl,
-          'user_password': password.text,
-          'user_place': selectedPlace,
-          'user_address': address.text,
-          'user_gender': selectedGender,
-          'user_dob': dob.text,
-          'user_contact': contact.text
+        String? proofUrl;
+        if (_proof != null) {
+          proofUrl = await _uploadImage(_proof!, userId, 'proof');
+        }
+
+        print("URL: $proofUrl");
+        print("URL: $photoUrl");
+
+        await supabase.from('tbl_doctor').insert({
+          'doctor_id': userId,
+          'doctor_name': fullname.text,
+          'doctor_email': email.text,
+          'doctor_photo': photoUrl,
+          'doctor_proof': proofUrl,
+          'doctor_password': password.text,
+          'place_id': selectedPlace,
+          'doctor_address': address.text,
+          'doctor_gender': selectedGender,
+          'doctor_dob': dob.text,
+          'doctor_contact': contact.text
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -122,9 +155,9 @@ class _RegisterState extends State<Register> {
     }
   }
 
-  Future<String?> _uploadImage(File image, String userId) async {
+  Future<String?> _uploadImage(File image, String userId, String type) async {
     try {
-      final fileName = 'user_$userId';
+      final fileName = '$type doctor_$userId';
       await supabase.storage.from('userdoc').upload(fileName, image);
       final imageUrl = supabase.storage.from('userdoc').getPublicUrl(fileName);
       return imageUrl;
@@ -138,213 +171,313 @@ class _RegisterState extends State<Register> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(
-        
-        child: Stack(
-          children: [
-            Container(
-              height: 1100,
-              width: 500,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [const Color.fromARGB(255, 76, 171, 161), Colors.teal.shade900],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  stops: [0.3, 1.0],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 20,
-                    offset: Offset(0, 5),
-                  ),
-                ],
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                const Color.fromARGB(255, 186, 220, 245),
+                Color.fromARGB(255, 37, 99, 160)
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              stops: [0.3, 1.0],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 20,
+                offset: Offset(0, 5),
               ),
-              child: AnimatedPositioned(
-                duration: Duration(seconds: 5),
-                left: -110,
+            ],
+          ),
+          child: Stack(
+            children: [
+              Positioned(
                 top: -100,
+                left: -100,
                 child: Container(
-                  width: 1000,
-                  height: 5000,
+                  width: 400,
+                  height: 400,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.teal.shade700.withOpacity(0.5),
+                    color: Color.fromARGB(255, 77, 132, 187),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.teal.shade700.withOpacity(0.8),
-                        blurRadius: 30,
-                        offset: Offset(20, 20),
+                        color: Color.fromARGB(255, 37, 99, 160),
+                        blurRadius: 20,
+                        offset: Offset(10, 10),
                       ),
                     ],
                   ),
                 ),
               ),
-            ),
-            Positioned(
-              top: -100,
-              left: -100,
-              child: Container(
-                width: 400,
-                height: 400,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.teal.shade700.withOpacity(0.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.teal.shade700.withOpacity(0.8),
-                      blurRadius: 20,
-                      offset: Offset(10, 10),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Positioned(
-              top: -200,
-              right: -300,
-              child: Container(
-                width: 600,
-                height: 600,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [Colors.teal.shade900, Color.fromARGB(255, 36, 181, 167)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomLeft,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.teal.shade700.withOpacity(0.5),
-                      blurRadius: 15,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Positioned(
-              top: 80,
-              left: 100,
-              child: Text(
-                "Create Your Account",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Poppins',
-                  shadows: [
-                    Shadow(
-                      blurRadius: 10.0,
-                      color: Colors.black.withOpacity(0.5),
-                      offset: Offset(2.0, 2.0),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 150, left: 220),
-              child: GestureDetector(
-                onTap: pickImage,
-                child: AnimatedContainer(
-                  duration: Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  width: 120,
-                  height: 120,
+              Positioned(
+                top: -200,
+                right: -300,
+                child: Container(
+                  width: 600,
+                  height: 600,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color.fromARGB(255, 31, 111, 111),
-                    image: _image != null ? DecorationImage(image: FileImage(_image!)) : null,
+                    gradient: LinearGradient(
+                      colors: [
+                        Color.fromARGB(255, 77, 132, 187),
+                        Color.fromARGB(255, 77, 132, 187)
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomLeft,
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.teal.shade800.withOpacity(0.5),
-                        blurRadius: 50,
+                        color: Color.fromARGB(255, 37, 99, 160),
+                        blurRadius: 15,
                         offset: Offset(0, 4),
                       ),
                     ],
                   ),
-                  child: _image == null
-                      ? Icon(Icons.camera_alt, color: Colors.white, size: 50)
-                      : null,
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20,vertical: 40),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 300),
-                  _buildInputField(fullname, 'Full Name', Icons.person),
-                  _buildInputField(address, 'Address', Icons.location_on),
-                  _buildInputField(contact, 'Contact', Icons.phone, keyboardType: TextInputType.phone),
-                  _buildGenderSelection(),
-                  _buildInputField(email, 'Email', Icons.email, keyboardType: TextInputType.emailAddress),
-                  _buildInputField(password, 'Password', Icons.lock, obscureText: true),
-                  _buildInputField(dob, 'Date of Birth', Icons.calendar_today, onTap: _pickDate),
-                   SizedBox(height: 30),
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: _signUp,
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                        backgroundColor: Colors.teal.shade700,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
+              Positioned(
+                top: 80,
+                left: 80,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 35, right: 40),
+                  child: Text(
+                    "Let’s Get You Started",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Poppins',
+                      shadows: [
+                        Shadow(
+                          blurRadius: 10.0,
+                          color: Colors.black.withOpacity(0.5),
+                          offset: Offset(2.0, 2.0),
                         ),
-                        elevation: 12,
-                        shadowColor: Colors.teal.shade900,
-                      ),
-                      
-                      child: Text(
-                        'Register',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold,color: Colors.white),
-                      
-                      ),
+                      ],
                     ),
                   ),
-                  
-// SizedBox(height: 20), // Add some space between the button and the text
-      Padding(
-        padding: const EdgeInsets.only(left: 50,top: 20),
-        child: Center(
-          child: Row(
-            children: [
-              Text(
-                'Already have an account? ',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w500,
-                  color: const Color.fromARGB(255, 227, 235, 234),
-                  decoration: TextDecoration.underline,
                 ),
               ),
-              TextButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => Loginpage()),
-                                  );
-                                },
-                                child: Text(
-                                  "Sign in",
-                                  style: TextStyle(color: const Color.fromARGB(255, 226, 232, 232),fontSize: 16),
-                                ),
+              Padding(
+                padding: const EdgeInsets.only(top: 150, left: 220),
+                child: GestureDetector(
+                  onTap: _pickImage,
+                  child: AnimatedContainer(
+                    duration: Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.blue.shade50,
+                      image: _image != null
+                          ? DecorationImage(image: FileImage(_image!))
+                          : null,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color.fromARGB(255, 37, 99, 160),
+                          blurRadius: 50,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: _image == null
+                        ? Icon(Icons.camera_alt,
+                            color: Color.fromARGB(255, 37, 99, 160), size: 50)
+                        : null,
+                  ),
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 370),
+                    _buildInputField(fullname, 'Full Name', Icons.person),
+                    _buildInputField(address, 'Address', Icons.location_on),
+                    _buildInputField(contact, 'Contact', Icons.phone,
+                        keyboardType: TextInputType.phone),
+                    SizedBox(height: 14),
+                    _buildGenderSelection(),
+                    SizedBox(height: 14),
+                    _buildInputField(email, 'Email', Icons.email,
+                        keyboardType: TextInputType.emailAddress),
+                    _buildInputField(password, 'Password', Icons.lock,
+                        obscureText: true),
+                    _buildInputField(dob, 'Date of Birth', Icons.calendar_today,
+                        onTap: _pickDate),
+                    SizedBox(height: 14),
+                    DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(
+                        hintText: 'District',
+                        prefixIcon: Icon(
+                          Icons.location_city,
+                        ),
+                        filled: true,
+                        fillColor: Color(0xFFF5F5F5),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide.none,
+                          borderRadius: BorderRadius.vertical(
+                              bottom: Radius.elliptical(20, 20)),
+                        ),
+                      ),
+                      value: selectedDistrict, //initilizee cheyunuu
+                      validator: (value) {
+                        if (value == "" || value!.isEmpty) {
+                          return "Enter the district name";
+                        }
+                        return null;
+                      },
+                      hint: Text("Select the District"),
+                      onChanged: (newValue) {
+                        //button click cheyubool text box ill select cheythaa valuee"newValue"leeku store cheyunuu
+                        setState(() {
+                          selectedDistrict =
+                              newValue; //"newValue" ill ulla value "selectedDistrict"leeku store cheyunuu
+                          fetchPlace(selectedDistrict!);
+                        });
+                      },
+                      items: districtlist.map((district) {
+                        return DropdownMenuItem<String>(
+                          value: district['district_id'].toString(),
+                          child: Text(district['district_name']),
+                        );
+                      }).toList(),
+                    ),
+                    SizedBox(
+                      height: 20,
+                    ),
+                    DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(
+                        hintText: 'Place',
+                        prefixIcon: Icon(
+                          Icons.location_pin,
+                        ),
+                        filled: true,
+                        fillColor: Color(0xFFF5F5F5),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide.none,
+                          borderRadius: BorderRadius.vertical(
+                              bottom: Radius.elliptical(20, 20)),
+                        ),
+                      ),
+                      value: selectedPlace, //initilizee cheyunuu
+                      validator: (value) {
+                        if (value == "" || value!.isEmpty) {
+                          return "Enter the Place name";
+                        }
+                        return null;
+                      },
+                      hint: Text("Select the Place"),
+                      onChanged: (newValue) {
+                        //button click cheyubool text box ill select cheythaa valuee"newValue"leeku store cheyunuu
+                        setState(() {
+                          selectedPlace =
+                              newValue; //"newValue" ill ulla value "selectedDistrict"leeku store cheyunuu
+                        });
+                      },
+                      items: placelist.map((place) {
+                        return DropdownMenuItem<String>(
+                          value: place['place_id'].toString(),
+                          child: Text(place['place_name']),
+                        );
+                      }).toList(),
+                    ),
+                    SizedBox(
+                      height: 20,
+                    ),
+                    TextFormField(
+                      readOnly: true, // Prevent manual text input
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(
+                          Icons.verified,
+                        ), // Dynamic icon color
+                        hintText: _hintText, // Dynamic hintText
+                        filled: true,
+                        fillColor: Color(0xFFF5F5F5),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.vertical(
+                              bottom: Radius.elliptical(20, 20)),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                        suffixIcon: IconButton(
+                          icon: Icon(Icons.upload_file,
+                              color: _iconColor), // Dynamic icon color
+                          onPressed: _pickproof, // Trigger file selection
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 40),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: _signUp,
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 40, vertical: 15),
+                          backgroundColor: Color.fromARGB(255, 37, 99, 160),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          elevation: 12,
+                          shadowColor: Color.fromARGB(255, 37, 99, 160),
+                        ),
+                        child: Text(
+                          'Register',
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white),
+                        ),
+                      ),
+                    ),
+
+                    // SizedBox(height: 20), // Add some space between the button and the text
+                    Padding(
+                      padding: const EdgeInsets.only(left: 50, top: 20),
+                      child: Center(
+                        child: Row(
+                          children: [
+                            Text(
+                              'Already have an account? ',
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w500,
+                                color: const Color.fromARGB(255, 227, 235, 234),
+                                decoration: TextDecoration.underline,
                               ),
-                              
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => Loginpage()),
+                                );
+                              },
+                              child: Text(
+                                "Sign in",
+                                style: TextStyle(
+                                    color: const Color.fromARGB(
+                                        255, 226, 232, 232),
+                                    fontSize: 16),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
-      ),
-
-
-                ],
-              ),
-            ),
-          ],
-        ),
-        
       ),
     );
   }
@@ -368,37 +501,25 @@ class _RegisterState extends State<Register> {
           fillColor: Color.fromARGB(255, 241, 246, 246),
           labelText: label,
           labelStyle: TextStyle(
-            color: Colors.teal.shade800,
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
+            // color: Color.fromARGB(255, 37, 99, 160),
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
           ),
           prefixIcon: Icon(icon),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(50),
+            borderRadius:
+                BorderRadius.vertical(bottom: Radius.elliptical(20, 20)),
             borderSide: BorderSide(
-              color: Colors.teal.shade900,
-              width: 2.0,
+              color: Color.fromARGB(255, 37, 99, 160),
+              width: 0,
             ),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(50),
+            borderRadius:
+                BorderRadius.vertical(bottom: Radius.elliptical(20, 20)),
             borderSide: BorderSide(
-              color: Colors.teal.shade900,
-              width: 3.0,
-            ),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(50),
-            borderSide: BorderSide(
-              color: Colors.red,
-              width: 2.0,
-            ),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(50),
-            borderSide: BorderSide(
-              color: Colors.redAccent,
-              width: 3.0,
+              color: Color.fromARGB(255, 37, 99, 160),
+              width: 0,
             ),
           ),
         ),
@@ -408,66 +529,90 @@ class _RegisterState extends State<Register> {
   }
 
   Widget _buildGenderSelection() {
-    return Container(
+    return AnimatedContainer(
+      duration: Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
       decoration: BoxDecoration(
         color: Color.fromARGB(255, 241, 246, 246),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.teal.shade700,
-          width: 2.0,
-        ),
+        borderRadius: BorderRadius.vertical(bottom: Radius.elliptical(20, 20)),
+        //border: Border.all(width: 0),
       ),
-      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Gender",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color.fromARGB(255, 13, 2, 2),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _showGenderOptions = !_showGenderOptions;
+              });
+            },
+            child: Row(
+              children: [
+                Icon(
+                  Icons.person,
+                ),
+                SizedBox(width: 10),
+                Text(
+                  "Gender",
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Spacer(),
+                Icon(
+                  _showGenderOptions
+                      ? Icons.arrow_drop_up
+                      : Icons.arrow_drop_down,
+                ),
+              ],
             ),
           ),
-          Row(
-            children: [
-              Radio<String>(
-                value: "Male",
-                groupValue: selectedGender,
-                onChanged: (value) {
-                  setState(() {
-                    selectedGender = value!;
-                  });
-                },
-                activeColor: Colors.teal.shade900,
-              ),
-              Text("Male", style: TextStyle(color: Color.fromARGB(255, 75, 59, 59))),
-              SizedBox(width: 15),
-              Radio<String>(
-                value: "Female",
-                groupValue: selectedGender,
-                onChanged: (value) {
-                  setState(() {
-                    selectedGender = value!;
-                  });
-                },
-                activeColor: Colors.teal.shade900,
-              ),
-              Text("Female", style: TextStyle(color: Color.fromARGB(255, 75, 59, 59))),
-              SizedBox(width: 15),
-              Radio<String>(
-                value: "Other",
-                groupValue: selectedGender,
-                onChanged: (value) {
-                  setState(() {
-                    selectedGender = value!;
-                  });
-                },
-                activeColor: Colors.teal.shade900,
-              ),
-              Text("Other", style: TextStyle(color: Color.fromARGB(255, 75, 59, 59))),
-            ],
-          ),
+          if (_showGenderOptions)
+            Column(
+              children: [
+                Row(
+                  children: [
+                    Radio<String>(
+                      value: "Male",
+                      groupValue: selectedGender,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedGender = value!;
+                        });
+                      },
+                      activeColor: Color.fromARGB(255, 37, 99, 160),
+                    ),
+                    Icon(Icons.male, color: Colors.blue, size: 30),
+                    SizedBox(width: 20),
+                    Radio<String>(
+                      value: "Female",
+                      groupValue: selectedGender,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedGender = value!;
+                        });
+                      },
+                      activeColor: Color.fromARGB(255, 37, 99, 160),
+                    ),
+                    Icon(Icons.female, color: Colors.pink, size: 30),
+                    SizedBox(width: 20),
+                    Radio<String>(
+                      value: "Other",
+                      groupValue: selectedGender,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedGender = value!;
+                        });
+                      },
+                      activeColor: Color.fromARGB(255, 37, 99, 160),
+                    ),
+                    Icon(Icons.transgender, color: Colors.purple, size: 30),
+                  ],
+                ),
+              ],
+            ),
         ],
       ),
     );

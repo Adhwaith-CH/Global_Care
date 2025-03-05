@@ -16,6 +16,7 @@ Future<void> main() async {
   runApp(const MainApp());
 }
 
+final supabase=Supabase.instance.client;
 
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
@@ -23,7 +24,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: DoctorHomeScreen()
+      home: Register()
     );
   }
 }

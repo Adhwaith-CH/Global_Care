@@ -9,144 +9,134 @@ class Department extends StatefulWidget {
 }
 
 class _DepartmentState extends State<Department> {
-  final supabase = Supabase.instance
-      .client; //oru collection off datayee oru variableeku set cheyunuuu
-  TextEditingController departmentController =
-      TextEditingController(); //variable initilize cheyunuuu
-  List<Map<String, dynamic>> _category = []; //database ill ninuu value edukunuu
-  int id = 0;
-  final _formKey = GlobalKey<FormState>();
-
-// To manage form visibility
-// Animation duration
-
+  final supabase = Supabase.instance.client;
+  TextEditingController departmentController = TextEditingController();
+  List<Map<String, dynamic>> _category = [];
   int eid = 0;
+  IconData? selectedIcon;
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
     super.initState();
-    fetchcat();
+    fetchDepartments();
   }
 
-//SELECT CHEYAN ULLA CODE
-
-  Future<void> fetchcat() async {
+  // Fetch departments from database
+  Future<void> fetchDepartments() async {
     try {
       final response = await supabase
           .from('tbl_department')
-          .select() .order('department_name', ascending: true); // Sort alphabetically
- //Tbl_category ill ninuu valuee select cheythuu edukunuu
-      // Response leeku store cheyunuu
+          .select()
+          .order('department_name', ascending: true);
       setState(() {
-        _category =
-            response; //response ill ulla value _category leeku store cheyunuu
+        _category = response;
       });
     } catch (e) {
-      print(
-          'Exception during fetch: $e'); //Enteelum reason karanum error varuvanekil / work aavunillagil entanu error ennu print aakan veedi ullathuu annu ith
-    } // Message illagilum kozhapam illa terminal ill ninuu error ulla line identify cheyan annu msg(Exception during fetch:) kodukunathuu
-  }
-
-//INSERT CHEYAN ULLA CODE
-
-  Future<void> insertcategory() async {
-  try {
-    // Check if the department already exists
-    final existingDepartment = await supabase
-        .from('tbl_department')
-        .select('department_name')
-        .eq('department_name', departmentController.text.toUpperCase())
-        .single(); // .single() ensures we only get one result
-
-    if (existingDepartment != null ) {
-      // Department already exists
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Department already exists!')),
-      );
-    } else {
-      // Insert the new department
-      await supabase.from('tbl_department').insert({
-        'department_name': departmentController.text.toUpperCase(),
-      });
-      fetchcat(); // Refresh the data
-      departmentController.clear(); // Clear the input field
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Inserted successfully')),
-      );
+      print('Fetch error: $e');
     }
-  } catch (e) {
-    print('Insert error: $e');
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Error occurred during insertion')),
-    );
   }
-}
 
-  Future<void> editdepartment() async {
+  // Insert a new department
+  Future<void> insertDepartment() async {
     try {
+      print("Inserting");
+      final existingDepartment = await supabase
+          .from('tbl_department')
+          .select('department_name')
+          .eq('department_name', departmentController.text.toUpperCase())
+          .maybeSingle();
+
+      if (existingDepartment != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Department already exists!')),
+        );
+      } else {
+        await supabase.from('tbl_department').insert({
+          'department_name': departmentController.text.toUpperCase(),
+          'department_icon': selectedIcon?.codePoint.toString(), // Store icon as string
+        });
+        fetchDepartments();
+        departmentController.clear();
+        selectedIcon = null;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Inserted successfully')),
+        );
+      }
+    } catch (e) {
+      print('Insert error: $e');
+    }
+  }
+
+  // Edit department
+  Future<void> editDepartment() async {
+    try {
+      print("Editing");
       await supabase.from('tbl_department').update({
         'department_name': departmentController.text.toUpperCase(),
+        'department_icon': selectedIcon?.codePoint.toString(), // Update icon as well
       }).eq('department_id', eid);
-      fetchcat();
+      fetchDepartments();
       departmentController.clear();
-
+      setState(() {
+        selectedIcon = null;
+        eid=0;
+      });
+      
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Update  successfully')),
+        const SnackBar(content: Text('Updated successfully')),
       );
     } catch (e) {
-      print(' update error: $e');
+      print('Update error: $e');
     }
   }
 
-
-Future<void> deletecat(int did) async {
+  // Delete department
+  Future<void> deleteDepartment(int did) async {
     try {
-      await supabase.from('tbl_department').delete().eq('department_id',
-          did); //Tbl_category ill ninuu value dalete cheyan ulla code
-      fetchcat(); ////database ill ninuu  appol thanee delete cheyunaa value remove cheyan annu ith use cheyunayhuu
-
-      //DELETE aayi ennu message kanikkan ulla code
+      await supabase.from('tbl_department').delete().eq('department_id', did);
+      fetchDepartments();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text(
-                'Deleted  successfully')), //ALERT message kanikkanam ulla code
+        const SnackBar(content: Text('Deleted successfully')),
       );
     } catch (e) {
-      print(
-          "Error Deleting: $e"); //Enteelum reason karanum error varuvanekil / work aavunillagil entanu error ennu print aakan veedi ullathuu annu ith
-    } // Message illagilum kozhapam illa terminal ill ninuu error ulla line identify cheyan annu msg(Exception during fetch:) kodukunathuu
+      print("Error Deleting: $e");
+    }
   }
 
   @override
-Widget build(BuildContext context) {
-  return Container(
-    padding: EdgeInsets.all(16), // Add padding inside the container
-    margin: EdgeInsets.all(16),  // Add padding inside the container
-    decoration: BoxDecoration(
-      color: Colors.white, // Background color for the container
-      borderRadius: BorderRadius.circular(16), // Rounded corners
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black26, // Subtle shadow color
-          blurRadius: 8, // Blur effect for shadow
-          offset: Offset(0, 4), // Vertical offset for shadow
-        ),
-      ],
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 1020),
-              child: ElevatedButton.icon(
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      margin: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              ElevatedButton.icon(
                 onPressed: () {
+                  setState(() {
+                    eid = 0;
+                    departmentController.clear();
+                    selectedIcon = null;
+                  });
                   _dialogBuilder(context);
                 },
-                label: Text("Add Department", style: TextStyle(fontSize: 16, color: Colors.white)),
+                label: Text("Add Department",
+                    style: TextStyle(fontSize: 16, color: Colors.white)),
                 icon: Icon(Icons.add, color: Colors.white),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.teal,
@@ -156,177 +146,222 @@ Widget build(BuildContext context) {
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 ),
               ),
-            )
-          ],
-        ),
-        SizedBox(height: 16),
-
-        // Fixed header with scrollable content
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.teal), // Border around table
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Column(
-            children: [
-              // Fixed table header
-              Container(
-                padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                color: Colors.teal.shade100, // Header background color
-                child: Row(
-                 // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Sl.No', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.teal[800])),
-                    SizedBox(width: 250),
-                    Text('Department Name', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.teal[800])),
-                    SizedBox(width: 500),
-                    Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.teal[800])),
-                  ],
-                ),
-              ),
-              // Scrollable table rows
-              SizedBox(
-                height: 500, // Set a fixed height for scrolling
-                width: double.infinity,
-                child: Expanded(
-                  
-                  child: SingleChildScrollView(
-                    child: DataTable(
-                      columns: [
-                        DataColumn(label: Container()), // Empty to match header
-                        DataColumn(label: Container()),
-                        DataColumn(label: Container()),
-                      ],
-                      rows: _category.asMap().entries.map((entry) {
-                        String department = entry.value['department_name'] as String;
-                  
-                        return DataRow(
-                    
-                          color: WidgetStateProperty.resolveWith<Color?>(
-                            (Set<WidgetState> states) {
-                              return entry.key.isEven ? Colors.teal.shade50 : Colors.white;
-                            },
-                          ),
-                          cells: [
-                            DataCell(Text((entry.key + 1).toString(), style: TextStyle(fontWeight: FontWeight.bold))),
-                            DataCell(Text(department)),
-                            DataCell(
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () {
-                                      deletecat(entry.value['department_id']);
-                                    },
-                                    tooltip: 'Delete Department',
-                                  ),
-                                  SizedBox(width: 8),
-                                  IconButton(
-                                    icon: Icon(Icons.edit, color: Colors.blue),
-                                    onPressed: () {
-                                      setState(() {
-                                        eid = entry.value['department_id'];
-                                        departmentController.text = entry.value['department_name'];
-                                        _dialogBuilder(context);
-                                      });
-                                    },
-                                    tooltip: 'Edit Department',
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ),
-              ),
             ],
           ),
-        ),
-      ],
-    ),
-  );
-}
+          SizedBox(height: 16),
 
+          // Table
+          DataTable(
+            headingRowColor: WidgetStatePropertyAll(Colors.teal.shade100),
+            columns: [
+              DataColumn(label: Text('Sl.No',style: TextStyle(fontWeight: FontWeight.bold, color: Colors.teal[800]))),
+              DataColumn(label: Text('Department Name',style: TextStyle(fontWeight: FontWeight.bold, color: Colors.teal[800]),)),
+              DataColumn(label: Text('Icon',style: TextStyle(fontWeight: FontWeight.bold, color: Colors.teal[800]),)),
+              DataColumn(label: Text('Actions',style: TextStyle(fontWeight: FontWeight.bold, color: Colors.teal[800]),)),
+            ],
+            
+            rows: _category.asMap().entries.map((entry) {
+              String department = entry.value['department_name'];
+              IconData? iconData = entry.value['department_icon'] != null
+                  ? IconData(int.parse(entry.value['department_icon']),
+                      fontFamily: 'MaterialIcons')
+                  : null;
 
-  Future<void> _dialogBuilder(BuildContext context) {
-    return showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            eid == 0 ? 'Add Department' : 'Edit Department',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          content: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: departmentController,
-                  validator: (value) {
-                    if (value == "" || value!.isEmpty) {
-                      return "Enter the department name";
-                    }
-                    return null;
-                  },
-                  decoration: InputDecoration(
-                    hintText: "Department Name",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.teal),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.teal),
+              return DataRow(
+                color: WidgetStateProperty.resolveWith<Color?>(
+                          (Set<WidgetState> states) {
+                            return entry.key.isEven ? Colors.white : Colors.teal.shade50;
+                          },
+                        ),
+                cells: [
+                  DataCell(Text((entry.key + 1).toString())),
+                  DataCell(Text(department)),
+                  DataCell(iconData != null
+                      ? Icon(iconData, color: Colors.teal)
+                      : Text('No Icon')),
+                  DataCell(
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.delete, color: Colors.red),
+                          onPressed: () {
+                            deleteDepartment(entry.value['department_id']);
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.edit, color: Colors.blue),
+                          onPressed: () {
+                            setState(() {
+                              eid = entry.value['department_id'];
+                              departmentController.text = department;
+                              selectedIcon = iconData;
+                            });
+                            _dialogBuilder(context);
+                          },
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                SizedBox(height: 16),
-              ],
-            ),
+                ],
+              );
+            }).toList(),
           ),
-          actions: <Widget>[
-            TextButton(
-              style: TextButton.styleFrom(
-                textStyle: Theme.of(context).textTheme.labelLarge,
-              ),
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: Colors.teal),
-              ),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              style: TextButton.styleFrom(
-                textStyle: Theme.of(context).textTheme.labelLarge,
-              ),
-              child: Text(
-                'Add',
-                style: TextStyle(color: Colors.teal),
-              ),
-              onPressed: () async {
-                if (_formKey.currentState!.validate()) {
-                  if (eid == 0) {
-                    await insertcategory();
-                  } else {
-                    await editdepartment();
-                  }
-                  Navigator.of(context).pop();
-                }
-              },
-            ),
-          ],
-        );
-      },
+        ],
+      ),
     );
   }
 
-  
+  Future<void> _dialogBuilder(BuildContext context) {
+  List<IconData> medicalIcons = [
+    Icons.local_hospital,
+    Icons.medical_services,
+    Icons.health_and_safety,
+    Icons.healing,
+    Icons.biotech,
+    Icons.bloodtype,
+    Icons.coronavirus,
+    Icons.sanitizer,
+    Icons.vaccines,
+    Icons.monitor_heart,
+    Icons.local_hospital,
+    Icons.healing,
+    Icons.favorite,
+    Icons.psychology,
+    Icons.accessibility_new,
+    Icons.child_care,
+    Icons.pregnant_woman,
+    Icons.face,
+    Icons.visibility,
+    Icons.hearing,
+    Icons.wc,
+    Icons.lunch_dining,
+    Icons.water_drop,
+    Icons.air,
+    Icons.science,
+    Icons.biotech,
+    Icons.sports_handball,
+    Icons.local_hospital,
+    Icons.health_and_safety,
+    Icons.psychology,
+    Icons.face_retouching_natural,
+    Icons.favorite_border,
+    Icons.bloodtype,
+    Icons.remove_red_eye,
+    Icons.hearing,
+    Icons.wc,
+    Icons.pregnant_woman,
+    Icons.restaurant,
+    Icons.medical_services,
+    Icons.local_hospital,
+    Icons.spa,
+    Icons.psychology,
+    Icons.directions_walk,
+    Icons.record_voice_over,
+    Icons.lunch_dining,
+    Icons.broken_image,
+    Icons.science,
+    Icons.local_pharmacy,
+    Icons.bloodtype,
+    Icons.local_hospital,
+    Icons.local_taxi,
+    Icons.article,
+    Icons.clean_hands,
+    Icons.people,
+    Icons.biotech,
+    Icons.science,
+    Icons.emoji_nature,
+    Icons.radio
+
+  ];
+
+  return showDialog<void>(
+    context: context,
+    builder: (BuildContext context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: Text(eid == 0 ? 'Add Department' : 'Edit Department'),
+            content: SizedBox(
+                height: 800,
+            width: 600,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: departmentController,
+                      decoration: InputDecoration(labelText: 'Department Name'),
+                    ),
+                    SizedBox(height: 16),
+                    Text("Select an Icon", style: TextStyle(fontWeight: FontWeight.bold)),
+                    SizedBox(height: 10),
+                          
+                    // **Fix for GridView inside AlertDialog**
+                    GridView.builder(
+                      physics: NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 4,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
+                      ),
+                      itemCount: medicalIcons.length,
+                      itemBuilder: (context, index) {
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedIcon = medicalIcons[index];
+                            });
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: selectedIcon == medicalIcons[index]
+                                  ? Colors.teal.withOpacity(0.3)
+                                  : Colors.grey[200],
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: selectedIcon == medicalIcons[index]
+                                    ? Colors.teal
+                                    : Colors.transparent,
+                                width: 2,
+                              ),
+                            ),
+                            child: Icon(medicalIcons[index], size: 32, color: Colors.teal),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel')),
+              TextButton(
+                onPressed: () async {
+                  if (selectedIcon == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Please select an icon")),
+                    );
+                    return;
+                  }
+                  if(eid==0){
+                    await insertDepartment();
+                  }
+                  else{
+                    await editDepartment();
+                  }
+                  Navigator.pop(context);
+                },
+                child: Text('Save'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
+
 }

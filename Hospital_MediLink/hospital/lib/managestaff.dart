@@ -31,7 +31,7 @@ class Staff {
 class _HospitalStaffManagementPageState
     extends State<HospitalStaffManagementPage> {
   // Sample hospital staff list
-  List<Staff> _staffList = [
+  final List<Staff> _staffList = [
     Staff(
       id: "001",
       name: "Dr. John Doe",

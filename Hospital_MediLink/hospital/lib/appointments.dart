@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class CounterStaffDashboard extends StatefulWidget {
+  const CounterStaffDashboard({super.key});
+
   @override
   _CounterStaffDashboardState createState() => _CounterStaffDashboardState();
 }
@@ -231,8 +233,8 @@ class _CounterStaffDashboardState extends State<CounterStaffDashboard> {
         ),
         floatingActionButton: FloatingActionButton(
           backgroundColor: Color(0xFF0277BD),
-          child: Icon(Icons.add, color: Colors.white),
           onPressed: _addAppointment,
+          child: Icon(Icons.add, color: Colors.white),
         ),
       ),
     );

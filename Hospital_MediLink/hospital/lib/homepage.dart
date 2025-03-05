@@ -6,6 +6,7 @@ import 'package:hospital/appointments.dart';
 import 'package:hospital/findperson.dart';
 import 'package:hospital/managestaff.dart';
 import 'package:hospital/attendence.dart';
+import 'package:hospital/viewdoctor.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
@@ -15,7 +16,7 @@ class Homepage extends StatefulWidget {
 }
 
 class _HomepageState extends State<Homepage> {
-ScrollController _scrollController = ScrollController();
+final ScrollController _scrollController = ScrollController();
   bool _isHeaderVisible = true;
 
   @override
@@ -49,6 +50,7 @@ ScrollController _scrollController = ScrollController();
 
 
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
@@ -87,7 +89,7 @@ ScrollController _scrollController = ScrollController();
                     Text(
                       "Dashboard Overview",
                       style: TextStyle(
-                        color: Color(0xFF0D47A1),
+                        color: Color(0xFF0277BD),
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
                       ),
@@ -112,13 +114,13 @@ ScrollController _scrollController = ScrollController();
                       children: [
                         _buildGridCard(
                           context,
-                          "Add Doctor",
+                          "View Doctor",
                           Icons.medical_services,
                           () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => Adddoctor()),
+                                  builder: (context) => ViewDoctor()),
                             );
                           },
                         ),
@@ -130,7 +132,7 @@ ScrollController _scrollController = ScrollController();
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => Adddepartment()),
+                                  builder: (context) => AddDepartment()),
                             );
                           },
                         ),
@@ -197,7 +199,7 @@ ScrollController _scrollController = ScrollController();
       padding: EdgeInsets.all(40),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF0D47A1), Color(0xFF0D47A1)],
+          colors: [Color(0xFF0277BD), Color(0xFF0277BD)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ), // Adding gradient for a modern look
@@ -279,7 +281,7 @@ ScrollController _scrollController = ScrollController();
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 40, color: Color(0xFF0D47A1)),
+          Icon(icon, size: 40, color: Color(0xFF0277BD)),
           SizedBox(height: 10),
           Text(
             title,
@@ -295,7 +297,7 @@ ScrollController _scrollController = ScrollController();
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF0D47A1),
+              color: Color(0xFF0277BD),
             ),
           ),
         ],
@@ -323,7 +325,7 @@ ScrollController _scrollController = ScrollController();
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 40, color: Color(0xFF0D47A1)),
+            Icon(icon, size: 40, color: Color(0xFF0277BD)),
             SizedBox(height: 10),
             Text(
               title,
@@ -359,7 +361,7 @@ ScrollController _scrollController = ScrollController();
       ),
       child: Column(
         children: [
-          Icon(icon, color: Color(0xFF0D47A1), size: 40),
+          Icon(icon, color: Color(0xFF0277BD), size: 40),
           SizedBox(height: 10),
           Text(
             title,
@@ -375,7 +377,7 @@ ScrollController _scrollController = ScrollController();
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF0D47A1),
+              color: Color(0xFF0277BD),
             ),
           ),
         ],
@@ -401,7 +403,7 @@ ScrollController _scrollController = ScrollController();
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: Color(0xFF0D47A1), size: 40),
+              Icon(icon, color: Color(0xFF0277BD), size: 40),
               SizedBox(height: 10),
               Text(
                 label,
