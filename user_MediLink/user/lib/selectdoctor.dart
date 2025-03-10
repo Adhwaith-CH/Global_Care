@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:user/booking.dart';
 import 'package:user/main.dart';
 
 class DoctorBooking extends StatefulWidget {
@@ -10,18 +11,15 @@ class DoctorBooking extends StatefulWidget {
 }
 
 class _DoctorBookingState extends State<DoctorBooking> {
-List<Map<String, dynamic>> doctorsList = [];
+  List<Map<String, dynamic>> doctorsList = [];
 
-
-
-   Future<void> fetchdoctors() async {
+  Future<void> fetchdoctors() async {
     try {
-
       final response = await supabase
           .from('tbl_doctor')
           .select('*, tbl_hospitaldepartment(*,tbl_department(*))')
           .eq("hospitaldepartment_id", widget.deptid);
-    print(response);
+      print(response);
       setState(() {
         doctorsList = response;
       });
@@ -37,15 +35,14 @@ List<Map<String, dynamic>> doctorsList = [];
     fetchdoctors();
   }
 
-
-  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
+        height: double.infinity,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-             colors: [Colors.blueGrey.shade50, Colors.blueGrey.shade200],
+           gradient: LinearGradient(
+            colors: [const Color.fromARGB(255, 247, 243, 243), const Color.fromARGB(255, 218, 228, 238)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -82,7 +79,7 @@ List<Map<String, dynamic>> doctorsList = [];
                               ),
                               prefixIcon: const Icon(
                                 Icons.search,
-                                color:  Color.fromARGB(255, 0, 0, 0),
+                                color: Color.fromARGB(255, 25, 83, 112),
                               ),
                               filled: true,
                               fillColor: Colors.white,
@@ -114,7 +111,7 @@ List<Map<String, dynamic>> doctorsList = [];
                           children: [
                             CircleAvatar(
                               radius: 50,
-                              backgroundColor:  Color.fromARGB(255, 0, 0, 0),
+                              backgroundColor: Color.fromARGB(255, 25, 83, 112),
                               child: Icon(
                                 Icons.person,
                                 size: 50,
@@ -127,37 +124,43 @@ List<Map<String, dynamic>> doctorsList = [];
                               style: const TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
-                                color:  Color.fromARGB(255, 0, 0, 0),
+                                color: Color.fromARGB(255, 25, 83, 112),
                               ),
                             ),
                             const SizedBox(height: 5),
                             Text(
-                              doctor['tbl_hospitaldepartment']['tbl_department']['department_name'] ?? 'Not specified',
+                              doctor['tbl_hospitaldepartment']['tbl_department']
+                                      ['department_name'] ??
+                                  'Not specified',
                               style: const TextStyle(
                                 fontSize: 16,
-                                color:  Color.fromARGB(255, 0, 0, 0),
+                                color: Color.fromARGB(255, 129, 143, 150),
                               ),
                             ),
                             const SizedBox(height: 10),
                             ElevatedButton(
                               onPressed: () {
-                                // Booking functionality here
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        AppointmentBookingPage(doctor: doctor),
+                                  ),
+                                );
                               },
                               child: const Text(
                                 "Book Appointment",
                                 style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
                               ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor:  Color.fromARGB(255, 0, 0, 0),
+                                backgroundColor: Color.fromARGB(255, 25, 83, 112),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(40),
-                                ),
+                                    borderRadius: BorderRadius.circular(40)),
                               ),
-                            ),
+                            )
                           ],
                         ),
                       ),

@@ -175,8 +175,8 @@ class _RegisterState extends State<Register> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                const Color.fromARGB(255, 186, 220, 245),
-                Color.fromARGB(255, 37, 99, 160)
+                const Color.fromARGB(255, 213, 225, 233),
+                const Color.fromARGB(255, 93, 133, 153)
               ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
@@ -200,10 +200,10 @@ class _RegisterState extends State<Register> {
                   height: 400,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Color.fromARGB(255, 77, 132, 187),
+                    color: const Color.fromARGB(255, 93, 133, 153),
                     boxShadow: [
                       BoxShadow(
-                        color: Color.fromARGB(255, 37, 99, 160),
+                        color: const Color.fromARGB(255, 93, 133, 153),
                         blurRadius: 20,
                         offset: Offset(10, 10),
                       ),
@@ -221,15 +221,15 @@ class _RegisterState extends State<Register> {
                     shape: BoxShape.circle,
                     gradient: LinearGradient(
                       colors: [
-                        Color.fromARGB(255, 77, 132, 187),
-                        Color.fromARGB(255, 77, 132, 187)
+                        const Color.fromARGB(255, 93, 133, 153),
+                        const Color.fromARGB(255, 93, 133, 153)
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomLeft,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Color.fromARGB(255, 37, 99, 160),
+                        color: const Color.fromARGB(255, 93, 133, 153),
                         blurRadius: 15,
                         offset: Offset(0, 4),
                       ),
@@ -241,7 +241,7 @@ class _RegisterState extends State<Register> {
                 top: 80,
                 left: 80,
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 35, right: 40),
+                  padding: const EdgeInsets.only(left: 3, right: 40),
                   child: Text(
                     "Let’s Get You Started",
                     style: TextStyle(
@@ -277,7 +277,7 @@ class _RegisterState extends State<Register> {
                           : null,
                       boxShadow: [
                         BoxShadow(
-                          color: Color.fromARGB(255, 37, 99, 160),
+                          color: const Color.fromARGB(255, 93, 133, 153),
                           blurRadius: 50,
                           offset: Offset(0, 4),
                         ),
@@ -285,7 +285,7 @@ class _RegisterState extends State<Register> {
                     ),
                     child: _image == null
                         ? Icon(Icons.camera_alt,
-                            color: Color.fromARGB(255, 37, 99, 160), size: 50)
+                            color: const Color.fromARGB(255, 93, 133, 153), size: 50)
                         : null,
                   ),
                 ),
@@ -420,12 +420,12 @@ class _RegisterState extends State<Register> {
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.symmetric(
                               horizontal: 40, vertical: 15),
-                          backgroundColor: Color.fromARGB(255, 37, 99, 160),
+                          backgroundColor: const Color.fromARGB(255, 93, 133, 153),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
                           ),
                           elevation: 12,
-                          shadowColor: Color.fromARGB(255, 37, 99, 160),
+                          shadowColor: const Color.fromARGB(255, 93, 133, 153),
                         ),
                         child: Text(
                           'Register',
@@ -501,7 +501,7 @@ class _RegisterState extends State<Register> {
           fillColor: Color.fromARGB(255, 241, 246, 246),
           labelText: label,
           labelStyle: TextStyle(
-            // color: Color.fromARGB(255, 37, 99, 160),
+            // color: const Color.fromARGB(255, 93, 133, 153),
             fontSize: 15,
             fontWeight: FontWeight.w500,
           ),
@@ -510,7 +510,7 @@ class _RegisterState extends State<Register> {
             borderRadius:
                 BorderRadius.vertical(bottom: Radius.elliptical(20, 20)),
             borderSide: BorderSide(
-              color: Color.fromARGB(255, 37, 99, 160),
+              color: const Color.fromARGB(255, 93, 133, 153),
               width: 0,
             ),
           ),
@@ -518,7 +518,7 @@ class _RegisterState extends State<Register> {
             borderRadius:
                 BorderRadius.vertical(bottom: Radius.elliptical(20, 20)),
             borderSide: BorderSide(
-              color: Color.fromARGB(255, 37, 99, 160),
+              color: const Color.fromARGB(255, 93, 133, 153),
               width: 0,
             ),
           ),
@@ -582,7 +582,7 @@ class _RegisterState extends State<Register> {
                           selectedGender = value!;
                         });
                       },
-                      activeColor: Color.fromARGB(255, 37, 99, 160),
+                      activeColor: const Color.fromARGB(255, 93, 133, 153),
                     ),
                     Icon(Icons.male, color: Colors.blue, size: 30),
                     SizedBox(width: 20),
@@ -594,7 +594,7 @@ class _RegisterState extends State<Register> {
                           selectedGender = value!;
                         });
                       },
-                      activeColor: Color.fromARGB(255, 37, 99, 160),
+                      activeColor: const Color.fromARGB(255, 93, 133, 153),
                     ),
                     Icon(Icons.female, color: Colors.pink, size: 30),
                     SizedBox(width: 20),
@@ -606,7 +606,7 @@ class _RegisterState extends State<Register> {
                           selectedGender = value!;
                         });
                       },
-                      activeColor: Color.fromARGB(255, 37, 99, 160),
+                      activeColor: const Color.fromARGB(255, 93, 133, 153),
                     ),
                     Icon(Icons.transgender, color: Colors.purple, size: 30),
                   ],

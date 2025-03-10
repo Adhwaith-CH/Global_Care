@@ -178,14 +178,14 @@ class _RegisterState extends State<Register> {
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.blueGrey.shade50, Colors.blueGrey.shade200],
+              colors: [Colors.blueGrey.shade50, const Color.fromARGB(255, 93, 133, 153)],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               stops: [0.3, 1.0],
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.blueGrey.shade50,
+                color: const Color.fromARGB(255, 93, 133, 153),
                 blurRadius: 20,
                 offset: Offset(0, 5),
               ),
@@ -201,10 +201,10 @@ class _RegisterState extends State<Register> {
                   height: 400,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.blueGrey.shade200,
+                    color: const Color.fromARGB(255, 93, 133, 153),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.blueGrey.shade50,
+                        color: const Color.fromARGB(255, 93, 133, 153),
                         blurRadius: 20,
                         offset: Offset(10, 10),
                       ),
@@ -222,15 +222,15 @@ class _RegisterState extends State<Register> {
                     shape: BoxShape.circle,
                     gradient: LinearGradient(
                       colors: [
-                        Colors.blueGrey.shade50,
-                        Colors.blueGrey.shade200
+                        const Color.fromARGB(255, 93, 133, 153),
+                        const Color.fromARGB(255, 93, 133, 153)
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomLeft,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.blueGrey.shade200,
+                        color: const Color.fromARGB(255, 93, 133, 153),
                         blurRadius: 15,
                         offset: Offset(0, 4),
                       ),
@@ -255,7 +255,7 @@ class _RegisterState extends State<Register> {
                           : null,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.blueGrey.shade50,
+                          color: const Color.fromARGB(255, 93, 133, 153),
                           blurRadius: 50,
                           offset: Offset(0, 4),
                         ),
@@ -263,7 +263,7 @@ class _RegisterState extends State<Register> {
                     ),
                     child: _image == null
                         ? Icon(Icons.camera_alt,
-                            color: Color.fromARGB(255, 0, 0, 0), size: 50)
+                            color: const Color.fromARGB(255, 93, 133, 153), size: 50)
                         : null,
                   ),
                 ),
@@ -377,7 +377,7 @@ class _RegisterState extends State<Register> {
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.symmetric(
                               horizontal: 40, vertical: 15),
-                          backgroundColor: Color.fromARGB(255, 0, 0, 0),
+                          backgroundColor: const Color.fromARGB(255, 93, 133, 153),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
                           ),
@@ -406,7 +406,7 @@ class _RegisterState extends State<Register> {
                                 fontSize: 17,
                                 fontWeight: FontWeight.w500,
                                 color: const Color.fromARGB(255, 227, 235, 234),
-                                decoration: TextDecoration.underline,
+                               // decoration: TextDecoration.underline,
                               ),
                             ),
                             TextButton(
@@ -540,7 +540,7 @@ class _RegisterState extends State<Register> {
                       },
                       activeColor: Color.fromARGB(255, 0, 0, 0),
                     ),
-                    Icon(Icons.male, color: Colors.blue, size: 30),
+                   Text("Male"),
                     SizedBox(width: 20),
                     Radio<String>(
                       value: "Female",
@@ -552,7 +552,7 @@ class _RegisterState extends State<Register> {
                       },
                       activeColor: Color.fromARGB(255, 0, 0, 0),
                     ),
-                    Icon(Icons.female, color: Colors.pink, size: 30),
+                    Text("Female"),
                     SizedBox(width: 20),
                     Radio<String>(
                       value: "Other",
@@ -564,7 +564,7 @@ class _RegisterState extends State<Register> {
                       },
                       activeColor: Color.fromARGB(255, 0, 0, 0),
                     ),
-                    Icon(Icons.transgender, color: Colors.purple, size: 30),
+                    Text("Other")
                   ],
                 ),
               ],

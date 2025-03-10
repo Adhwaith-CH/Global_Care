@@ -18,9 +18,9 @@ class PatientHealthHistoryPage extends StatelessWidget {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.blueGrey.shade50, Colors.blueGrey.shade200],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            colors: [const Color.fromARGB(255, 247, 243, 243), const Color.fromARGB(255, 218, 228, 238)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
         ),
         child: Padding(
@@ -56,7 +56,7 @@ class PatientHealthHistoryPage extends StatelessWidget {
         contentPadding: EdgeInsets.all(12),
         leading: CircleAvatar(
           radius: 50,
-          backgroundColor: Color.fromARGB(255, 0, 0, 0),
+          backgroundColor: Color.fromARGB(255, 15, 67, 94),
           child: Icon(
             Icons.person,
             size: 50,

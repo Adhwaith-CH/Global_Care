@@ -45,7 +45,7 @@ class _LoginpageState extends State<Loginpage> {
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [ Color.fromARGB(255, 69, 130, 191), Colors.blue.shade50],
+                  colors: [ const Color.fromARGB(255, 93, 133, 153), Colors.blue.shade50],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
@@ -62,13 +62,13 @@ class _LoginpageState extends State<Loginpage> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
-                    colors: [Color.fromARGB(255, 74, 132, 190), Color.fromARGB(255, 74, 132, 190)],
+                    colors: [const Color.fromARGB(255, 93, 133, 153), const Color.fromARGB(255, 93, 133, 153)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Color.fromARGB(255, 74, 132, 190),
+                      color: const Color.fromARGB(255, 93, 133, 153),
                       blurRadius: 15,
                       offset: Offset(0, 4),
                     ),
@@ -85,7 +85,7 @@ class _LoginpageState extends State<Loginpage> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
-                    colors: [Colors.blue.shade50, const Color.fromARGB(255, 167, 210, 240)],
+                    colors: [Colors.blue.shade50, const Color.fromARGB(255, 93, 133, 153)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -127,7 +127,7 @@ class _LoginpageState extends State<Loginpage> {
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
-                            color: Color.fromARGB(255, 37, 99, 160),
+                            color: const Color.fromARGB(255, 93, 133, 153),
                           ),
                         ),
                         SizedBox(height: 10),
@@ -145,15 +145,15 @@ class _LoginpageState extends State<Loginpage> {
                           controller: _emailEditingController,
                           decoration: InputDecoration(
                             labelText: 'Email',
-                            labelStyle: TextStyle(color:Color.fromARGB(255, 37, 99, 160)),
+                            labelStyle: TextStyle(color:const Color.fromARGB(255, 93, 133, 153)),
                             border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(30.0)),
-                            prefixIcon: Icon(Icons.email, color: Color.fromARGB(255, 37, 99, 160)),
+                            prefixIcon: Icon(Icons.email, color: const Color.fromARGB(255, 93, 133, 153)),
                             contentPadding: EdgeInsets.fromLTRB(
                                 20.0, 15.0, 20.0, 15.0),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30.0),
-                              borderSide: BorderSide(color: Color.fromARGB(255, 37, 99, 160)),
+                              borderSide: BorderSide(color: const Color.fromARGB(255, 93, 133, 153)),
                             ),
                           ),
                         ),
@@ -165,10 +165,10 @@ class _LoginpageState extends State<Loginpage> {
                           obscureText: true,
                           decoration: InputDecoration(
                             labelText: 'Password',
-                            labelStyle: TextStyle(color: Color.fromARGB(255, 37, 99, 160)),
+                            labelStyle: TextStyle(color: const Color.fromARGB(255, 93, 133, 153)),
                             border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(30.0)),
-                            prefixIcon: Icon(Icons.lock, color:Color.fromARGB(255, 37, 99, 160)),
+                            prefixIcon: Icon(Icons.lock, color:const Color.fromARGB(255, 93, 133, 153)),
                             contentPadding: EdgeInsets.fromLTRB(
                                 20.0, 15.0, 20.0, 15.0),
                             focusedBorder: OutlineInputBorder(
@@ -192,7 +192,7 @@ class _LoginpageState extends State<Loginpage> {
                             },
                             child: Text(
                               "Forgot Password?",
-                              style: TextStyle(color: Color.fromARGB(255, 37, 99, 160)),
+                              style: TextStyle(color: const Color.fromARGB(255, 93, 133, 153)),
                             ),
                           ),
                         ),
@@ -204,14 +204,14 @@ class _LoginpageState extends State<Loginpage> {
                             signIn();
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Color.fromARGB(255, 37, 99, 160),
+                            backgroundColor: const Color.fromARGB(255, 93, 133, 153),
                             padding: EdgeInsets.symmetric(
                                 horizontal: 50, vertical: 15),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(30),
                             ),
                             elevation: 5,
-                            shadowColor: Color.fromARGB(255, 37, 99, 160),
+                            shadowColor: const Color.fromARGB(255, 93, 133, 153),
                           ),
                           child: Text(
                             'Login',
@@ -242,7 +242,7 @@ class _LoginpageState extends State<Loginpage> {
                               },
                               child: Text(
                                 "Sign Up",
-                                style: TextStyle(color:Color.fromARGB(255, 37, 99, 160)),
+                                style: TextStyle(color:const Color.fromARGB(255, 93, 133, 153)),
                               ),
                             ),
                           ],

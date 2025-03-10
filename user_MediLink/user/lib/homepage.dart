@@ -1,46 +1,81 @@
 import 'package:flutter/material.dart';
-import 'package:curved_navigation_bar/curved_navigation_bar.dart';
-import 'package:user/booking.dart';
+import 'package:user/hospitalselection.dart';
 import 'package:user/history.dart';
-import 'package:user/selectdoctor.dart';
+import 'package:user/main.dart';
 import 'package:user/profile.dart';
 
 class UserHomeScreen extends StatefulWidget {
   const UserHomeScreen({super.key});
+
+
+
+
+
+
+
 
   @override
   State<UserHomeScreen> createState() => _UserHomeScreenState();
 }
 
 class _UserHomeScreenState extends State<UserHomeScreen> {
-  int _selectedIndex = 1;
-  bool isToggled = false;
-  int selectedNumber = 10; // Initial value
+  
 
-  final List<Widget> _pages = [
-    HospitalBooking(),
-    HomePageContent(),
-    Profile(),
-  ];
 
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: null,
       body: HomePageContent(), // Directly showing HomePageContent
+      
     );
   }
 }
+
+
+
+
 
 class HomePageContent extends StatefulWidget {
   @override
   _HomePageContentState createState() => _HomePageContentState();
 }
 
+
+
 class _HomePageContentState extends State<HomePageContent> {
+  
   bool isToggled = false;
 
   set selectedNumber(int selectedNumber) {}
+
+   List<Map<String, dynamic>> appointmentList = [];
+
+
+
+
+@override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    fetchappointment();
+  }
+
+
+Future<void> fetchappointment() async {
+    try {
+      final response = await supabase
+          .from('tbl_appointment')
+          .select('*, tbl_availability(*, tbl_doctor("doctor_name", tbl_hospitaldepartment(tbl_department("department_name"),tbl_hospital("hospital_name","hospital_photo"))))');
+      print(response);
+      setState(() {
+        appointmentList = response;
+      });
+    } catch (e) {
+      print('Exception during fetch: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,8 +83,8 @@ class _HomePageContentState extends State<HomePageContent> {
       body: Container(
         height: double.infinity,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blueGrey.shade50, Colors.blueGrey.shade200],
+           gradient: LinearGradient(
+            colors: [const Color.fromARGB(255, 247, 243, 243), const Color.fromARGB(255, 218, 228, 238)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -78,7 +113,7 @@ class _HomePageContentState extends State<HomePageContent> {
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 0, 0, 0),
+                      color: Color.fromARGB(255, 25, 83, 112),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -92,7 +127,7 @@ class _HomePageContentState extends State<HomePageContent> {
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 0, 0, 0),
+                      color: Color.fromARGB(255, 25, 83, 112),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -131,7 +166,7 @@ class _HomePageContentState extends State<HomePageContent> {
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: Color.fromARGB(255, 0, 0, 0),
+                color: Color.fromARGB(255, 25, 83, 112),
               ),
             ),
             SizedBox(height: 4),
@@ -150,7 +185,7 @@ class _HomePageContentState extends State<HomePageContent> {
           },
           child: CircleAvatar(
             radius: 30,
-            backgroundColor: Color.fromARGB(255, 0, 0, 0),
+            backgroundColor: Color.fromARGB(255, 25, 83, 112),
             child: Icon(Icons.person, size: 30, color: Colors.white),
           ),
         )
@@ -175,7 +210,7 @@ class _HomePageContentState extends State<HomePageContent> {
       ),
       child: Row(
         children: [
-          Icon(Icons.dashboard, size: 60, color: Color.fromARGB(255, 0, 0, 0)),
+          Icon(Icons.dashboard, size: 60, color: Color.fromARGB(255, 25, 83, 112)),
           const SizedBox(width: 20),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,7 +220,7 @@ class _HomePageContentState extends State<HomePageContent> {
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 0, 0, 0),
+                  color: Color.fromARGB(255, 25, 83, 112),
                 ),
               ),
               SizedBox(height: 8),
@@ -203,183 +238,209 @@ class _HomePageContentState extends State<HomePageContent> {
   }
 
   Widget _buildQuickLinks() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildActionCard(
-            icon: Icons.person,
-            label: 'View History',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => PatientHealthHistoryPage()),
-              );
-            },
-          ),
+  return Row(
+    children: [
+      Expanded(
+        child: _buildActionCard(
+          imagePath: 'assets/freepik__the-style-is-candid-image-photography-with-natural__37503.jpeg', // Local image
+          label: 'View History',
+          
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => PatientHealthHistoryPage()),
+              
+            );
+          },
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildActionCard(
-            icon: Icons.schedule,
-            label: 'Booking',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => HospitalBooking()),
-              );
-            },
-          ),
+      ),
+      const SizedBox(width: 16),
+      Expanded(
+        child: _buildActionCard(
+          imagePath: 'assets/freepik__the-style-is-candid-image-photography-with-natural__37504.jpeg', // Another image
+          label: 'Booking',
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => HospitalBooking()),
+            );
+          },
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
+
 
   Widget _buildActionCard({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 120,
+  String? imagePath, // Image instead of Icon
+  required String label,
+  required VoidCallback onTap,
+}) {
+  return GestureDetector(
+    onTap: onTap,
+    child: Container(
+      height: 140, // Increased height for better spacing
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (imagePath != null)
+            Expanded( // Ensures the image fills the available space
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(15), // Optional rounded corners
+                child: Image.asset(
+                  imagePath,
+                  width: double.infinity, // Ensures full width usage
+                  fit: BoxFit.contain, // Adjust to fit the container perfectly
+                ),
+              ),
+            ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color.fromARGB(255, 15, 67, 94),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+
+ Widget _buildInsightCards() {
+  return Column(
+    children: appointmentList.map((data) {
+      // final appointment = data;
+      print(data);
+      String doctor = data['tbl_availability']['tbl_doctor']['doctor_name'];
+      String hospital = data['tbl_availability']['tbl_doctor']['tbl_hospitaldepartment']['tbl_hospital']['hospital_name'];
+      String photo = data['tbl_availability']['tbl_doctor']['tbl_hospitaldepartment']['tbl_hospital']['hospital_photo'];
+      String department = data['tbl_availability']['tbl_doctor']['tbl_hospitaldepartment']['tbl_department']['department_name'];
+      String date = data['appointment_date'];
+      String time = data['tbl_availability']['availability_time'];
+      String token = data['appointment_token'].toString();
+      return Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: Offset(0, 4),
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Row(
           children: [
-            Icon(icon, size: 40, color: Color.fromARGB(255, 0, 0, 0)),
-            const SizedBox(height: 10),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color.fromARGB(255, 0, 0, 0),
+            // Hospital Logo / Avatar
+            CircleAvatar(
+              radius: 35,
+              backgroundColor: const Color.fromARGB(255, 15, 67, 94),
+              child: const Icon(
+                Icons.local_hospital,
+                size: 35,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 16),
+
+            // Hospital & Doctor Details (Left Side)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    data['name'] ?? 'Unknown Hospital',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color.fromARGB(255, 15, 67, 94),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  _buildDetailRow(Icons.person, data['doctor_name'] ?? 'Not available'),
+                  _buildDetailRow(Icons.medical_services, data['doctor_department'] ?? 'Not available'),
+                  _buildDetailRow(Icons.calendar_today, data['appointment_date'] ?? 'Not specified'),
+                  _buildDetailRow(Icons.access_time, data['appointment_time'] ?? 'Not specified'),
+                ],
+              ),
+            ),
+
+            // Token Number Badge (Right Side)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
+              decoration: BoxDecoration(
+                color: Color.fromARGB(255, 15, 67, 94), // Professional dark red
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 5,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  const Icon(
+                    Icons.confirmation_num,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    data['appointment_token'].toString() ?? 'N/A',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
+      );
+    }).toList(),
+  );
+}
+
+// Helper Function for Cleaner Code
+Widget _buildDetailRow(IconData icon, String text) {
+  return Row(
+    children: [
+      Icon(icon, size: 18, color: Color.fromARGB(255, 15, 67, 94)),
+      const SizedBox(width: 6),
+      Text(
+        text,
+        style: const TextStyle(fontSize: 16, color: Colors.black87),
       ),
-    );
-  }
+    ],
+  );
+}
 
-  Widget _buildInsightCards() {
-    return Column(
-      children: [
-        for (var hospital in _hospitalsList)
-          Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Hospital Logo / Avatar
-                CircleAvatar(
-                  radius: 35,
-                  backgroundColor: Colors.black,
-                  child: Icon(
-                    Icons.local_hospital,
-                    size: 35,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(width: 16),
-
-                // Hospital & Doctor Details
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        hospital['name'] ?? 'Unknown Hospital',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          const Icon(Icons.person,
-                              size: 18, color: Colors.black54),
-                          const SizedBox(width: 6),
-                          Text(
-                            hospital['doctor_name'] ?? 'Not available',
-                            style: const TextStyle(
-                                fontSize: 16, color: Colors.black87),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          const Icon(Icons.medical_services,
-                              size: 18, color: Colors.black54),
-                          const SizedBox(width: 6),
-                          Text(
-                            hospital['doctor_department'] ?? 'Not available',
-                            style: const TextStyle(
-                                fontSize: 16, color: Colors.black87),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          const Icon(Icons.calendar_today,
-                              size: 18, color: Colors.black54),
-                          const SizedBox(width: 6),
-                          Text(
-                            hospital['appointment_date'] ?? 'Not specified',
-                            style: const TextStyle(
-                                fontSize: 16, color: Colors.black87),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          const Icon(Icons.access_time,
-                              size: 18, color: Colors.black54),
-                          const SizedBox(width: 6),
-                          Text(
-                            hospital['appointment_time'] ?? 'Not specified',
-                            style: const TextStyle(
-                                fontSize: 16, color: Colors.black87),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          )
-      ],
-    );
-  }
 
   final List<Map<String, String>> _hospitalsList = [
     {
@@ -435,7 +496,7 @@ class _HomePageContentState extends State<HomePageContent> {
       ),
       child: Row(
         children: [
-          Icon(Icons.bar_chart, size: 50, color: Color.fromARGB(255, 0, 0, 0)),
+          Icon(Icons.bar_chart, size: 50, color: Color.fromARGB(255, 25, 83, 112)),
           const SizedBox(width: 20),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -445,7 +506,7 @@ class _HomePageContentState extends State<HomePageContent> {
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 0, 0, 0),
+                  color: Color.fromARGB(255, 25, 83, 112),
                 ),
               ),
               const SizedBox(height: 8),
@@ -479,7 +540,7 @@ class _HomePageContentState extends State<HomePageContent> {
       ),
       child: Row(
         children: [
-          Icon(Icons.settings, size: 40, color: Color.fromARGB(255, 0, 0, 0)),
+          Icon(Icons.settings, size: 40, color: Color.fromARGB(255, 25, 83, 112)),
           const SizedBox(width: 16),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -489,7 +550,7 @@ class _HomePageContentState extends State<HomePageContent> {
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 0, 0, 0),
+                  color: Color.fromARGB(255, 25, 83, 112),
                 ),
               ),
               const SizedBox(height: 4),

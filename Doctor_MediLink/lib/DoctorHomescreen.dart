@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+import 'package:loginpage/appointments.dart';
 import 'package:loginpage/finduser.dart';
 import 'package:loginpage/profile.dart';
+import 'package:loginpage/viewpatient.dart';
+
 
 class DoctorHomeScreen extends StatefulWidget {
   const DoctorHomeScreen({super.key});
@@ -231,8 +234,11 @@ class _HomePageContentState extends State<HomePageContent> {
             icon: Icons.person,
             label: 'View Patients',
             onTap: () {
-              // Navigate to View Patients Page
-            },
+             Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ConsultedPatientsListPage()),
+            );
+            }
           ),
         ),
         const SizedBox(width: 16),
@@ -241,7 +247,10 @@ class _HomePageContentState extends State<HomePageContent> {
             icon: Icons.schedule,
             label: 'Appointments',
             onTap: () {
-              // Navigate to Appointments Page
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => TodayAppointmentsPage()),
+            );
             },
           ),
         ),

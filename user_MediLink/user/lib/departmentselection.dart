@@ -47,7 +47,7 @@ class _DepartmentSelectionState extends State<DepartmentSelection> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.blueGrey.shade50, Colors.blueGrey.shade200],
+            colors: [Colors.blueGrey.shade50, const Color.fromARGB(255, 93, 133, 153)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -57,10 +57,10 @@ class _DepartmentSelectionState extends State<DepartmentSelection> {
           child: GridView.builder(
             itemCount: hospitalDepartmentList.length,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2, // Two columns
+              crossAxisCount: 1, // Two columns
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
-              childAspectRatio: 1.1, // Controls card height
+              childAspectRatio: 1.8, // Controls card height
             ),
             itemBuilder: (context, index) {
               final department = hospitalDepartmentList[index];
