@@ -1,3 +1,4 @@
+import 'package:adminglobalcare/components/formvalidation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -274,6 +275,8 @@ class _DepartmentState extends State<Department> {
 
   ];
 
+  final formKey = GlobalKey<FormState>();
+
   return showDialog<void>(
     context: context,
     builder: (BuildContext context) {
@@ -285,54 +288,58 @@ class _DepartmentState extends State<Department> {
                 height: 800,
             width: 600,
               child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextFormField(
-                      controller: departmentController,
-                      decoration: InputDecoration(labelText: 'Department Name'),
-                    ),
-                    SizedBox(height: 16),
-                    Text("Select an Icon", style: TextStyle(fontWeight: FontWeight.bold)),
-                    SizedBox(height: 10),
-                          
-                    // **Fix for GridView inside AlertDialog**
-                    GridView.builder(
-                      physics: NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 4,
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextFormField(
+                        validator: (value) => FormValidation.validateName(value),
+                        controller: departmentController,
+                        decoration: InputDecoration(labelText: 'Department Name'),
                       ),
-                      itemCount: medicalIcons.length,
-                      itemBuilder: (context, index) {
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              selectedIcon = medicalIcons[index];
-                            });
-                          },
-                          child: Container(
-                            padding: EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: selectedIcon == medicalIcons[index]
-                                  ? Colors.teal.withOpacity(0.3)
-                                  : Colors.grey[200],
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
+                      SizedBox(height: 16),
+                      Text("Select an Icon", style: TextStyle(fontWeight: FontWeight.bold)),
+                      SizedBox(height: 10),
+                            
+                      // **Fix for GridView inside AlertDialog**
+                      GridView.builder(
+                        physics: NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          crossAxisSpacing: 8,
+                          mainAxisSpacing: 8,
+                        ),
+                        itemCount: medicalIcons.length,
+                        itemBuilder: (context, index) {
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                selectedIcon = medicalIcons[index];
+                              });
+                            },
+                            child: Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
                                 color: selectedIcon == medicalIcons[index]
-                                    ? Colors.teal
-                                    : Colors.transparent,
-                                width: 2,
+                                    ? Colors.teal.withOpacity(0.3)
+                                    : Colors.grey[200],
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: selectedIcon == medicalIcons[index]
+                                      ? Colors.teal
+                                      : Colors.transparent,
+                                  width: 2,
+                                ),
                               ),
+                              child: Icon(medicalIcons[index], size: 32, color: Colors.teal),
                             ),
-                            child: Icon(medicalIcons[index], size: 32, color: Colors.teal),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -340,7 +347,8 @@ class _DepartmentState extends State<Department> {
               TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel')),
               TextButton(
                 onPressed: () async {
-                  if (selectedIcon == null) {
+                  if(formKey.currentState!.validate()){
+                    if (selectedIcon == null) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text("Please select an icon")),
                     );
@@ -352,6 +360,8 @@ class _DepartmentState extends State<Department> {
                   else{
                     await editDepartment();
                   }
+                  }
+                  
                   Navigator.pop(context);
                 },
                 child: Text('Save'),

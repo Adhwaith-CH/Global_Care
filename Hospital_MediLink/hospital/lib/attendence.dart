@@ -64,22 +64,28 @@ class _StaffAttendancePageState extends State<StaffAttendancePage> {
     }
   }
 
-  Future<void> attendence(String id, int status) async {
-    try {
-      await supabase.from('tbl_attendence').insert({
-        'attendence_status': status,
-        'doctor_id': id,
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Present')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Error:$e")));
+ Future<void> attendence(String id, int status) async {
+  try {
+    // Update the doctor_status column in tbl_doctor
+    await supabase.from('tbl_doctor').update({
+      'doctor_status': status,
+    }).eq('doctor_id', id);
 
-      print('Operation failed: $e');
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(status == 1 ? 'Marked Present' : 'Marked Absent')),
+    );
+
+    // Refresh UI to reflect changes
+    setState(() {
+      _attendanceState[id] = status == 1 ? 'Present' : 'Absent';
+    });
+  } catch (e) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text("Error updating status: $e")));
+    print('Operation failed: $e');
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -116,7 +122,6 @@ class _StaffAttendancePageState extends State<StaffAttendancePage> {
                 itemCount: _filteredDoctorList.length,
                 itemBuilder: (context, index) {
                   final staff = _filteredDoctorList[index];
-                  print("Staff: $staff");
                   final doctor = staff['doctor_name'];
                   final department = staff['tbl_hospitaldepartment']
                       ['tbl_department']['department_name'];
@@ -166,7 +171,7 @@ class _StaffAttendancePageState extends State<StaffAttendancePage> {
                                 _attendanceState[id] =
                                     'Absent'; // Mark as Absent
                               });
-                              status = 2;
+                              status = 0;
                               attendence(id, status);
                             },
                             child: Text(

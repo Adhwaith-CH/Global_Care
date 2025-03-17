@@ -21,7 +21,25 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: Register()
+      home: AuthWrapper()
     );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // Check if the user is already logged in
+    final session = supabase.auth.currentSession;
+
+    if (session != null) {
+      // User is logged in, navigate to HomePage
+      return HomePageContent();
+    } else {
+      // User is not logged in, navigate to LandingPage
+      return Register();
+    }
   }
 }

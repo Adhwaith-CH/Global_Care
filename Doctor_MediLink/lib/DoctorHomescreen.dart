@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:loginpage/appointments.dart';
 import 'package:loginpage/finduser.dart';
+import 'package:loginpage/main.dart';
 import 'package:loginpage/profile.dart';
 import 'package:loginpage/viewpatient.dart';
-
 
 class DoctorHomeScreen extends StatefulWidget {
   const DoctorHomeScreen({super.key});
@@ -19,13 +19,10 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   int selectedNumber = 10; // Initial value
 
   final List<Widget> _pages = [
-    
     Finduser(),
     HomePageContent(),
     Profile(),
   ];
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -40,13 +37,12 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
           Icon(Icons.account_circle, size: 30, color: Colors.white),
         ],
         height: 60,
-        color: Color.fromARGB(255, 37, 99, 160), // Emerald Green
-        backgroundColor: Colors.white,
+        color: Color.fromARGB(255, 25, 83, 112), // Emerald Green
+        backgroundColor: const Color.fromARGB(255, 218, 228, 238),
         animationCurve: Curves.easeInOut,
         animationDuration: const Duration(milliseconds: 350),
         onTap: (index) {
           setState(() {
-            
             _selectedIndex = index;
           });
         },
@@ -60,95 +56,119 @@ class HomePageContent extends StatefulWidget {
   _HomePageContentState createState() => _HomePageContentState();
 }
 
+
+
 class _HomePageContentState extends State<HomePageContent> {
   bool isToggled = false;
+  String Name = "";
+  String doctorphoto = "";
 
   set selectedNumber(int selectedNumber) {}
 
+
+@override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    fetchProfileData();
+  }
+  Future<void> fetchProfileData() async {
+    try {
+      final doctor_id = supabase.auth.currentUser!.id;
+
+      if (doctor_id == null) {
+        print('User not logged in');
+        return;
+      }
+
+      final response = await supabase
+          .from('tbl_doctor') // Your Supabase table name
+          .select('*,tbl_place("*",tbl_district(*))') // Columns to fetch
+          .eq('doctor_id', doctor_id) // Fetch only the logged-in user’s data
+          .single(); // Get only one record
+      setState(() {
+        Name = response['doctor_name'] ?? 'No Name';
+        doctorphoto = response['doctor_photo'] ?? 'No Name';
+      });
+    } catch (error) {
+      print('Error fetching profile data: $error');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return  Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade50, Colors.blue.shade50],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+    return Container(
+      height: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color.fromARGB(255, 247, 243, 243),
+            const Color.fromARGB(255, 218, 228, 238)
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header Section
-                  _buildHeader(),
+      ),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header Section
+                _buildHeader(),
 
-                  const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-                  // Highlight Section
-                  _buildHighlightSection(),
+                // Highlight Section
+                _buildHighlightSection(),
 
-                  const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-                  // Quick Links Section
-                  Text(
-                    'Quick Links',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 37, 99, 160),
-                    ),
+                // Quick Links Section
+                Text(
+                  'Quick Links',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 25, 83, 112),
                   ),
-                  const SizedBox(height: 16),
-                  _buildQuickLinks(),
+                ),
+                const SizedBox(height: 16),
+                _buildQuickLinks(),
 
-                  const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-                  // Insights Section
-                  Text(
-                    'Detailed Insights',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 37, 99, 160),
-                    ),
+                // Insights Section
+                Text(
+                  'Detailed Insights',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 25, 83, 112),
                   ),
-                  const SizedBox(height: 16),
-                  _buildInsightCards(),
+                ),
+                const SizedBox(height: 16),
+                _buildInsightCards(),
 
-                  const SizedBox(height: 24),
+                const SizedBox(height: 44),
 
-                  // Settings Section
-                  Text(
-                    'Settings',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 37, 99, 160),
-                    ),
+                // Settings Section
+
+                // Footer
+                Center(
+                  child: Text(
+                    'Powered by MediLink © 2025',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                   ),
-                  const SizedBox(height: 16),
-                  _buildSettingsCards(),
-
-                  const SizedBox(height: 40),
-
-                  // Footer
-                  Center(
-                    child: Text(
-                      'Powered by MediLink © 2025',
-                      style: TextStyle(
-                          color: Colors.grey.shade600, fontSize: 14),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
-      );
+      ),
+    );
   }
 
   Widget _buildHeader() {
@@ -163,7 +183,7 @@ class _HomePageContentState extends State<HomePageContent> {
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: Color.fromARGB(255, 37, 99, 160),
+                color: Color.fromARGB(255, 25, 83, 112),
               ),
             ),
             SizedBox(height: 4),
@@ -175,8 +195,13 @@ class _HomePageContentState extends State<HomePageContent> {
         ),
         CircleAvatar(
           radius: 30,
-          backgroundColor: Color.fromARGB(255, 37, 99, 160),
-          child: Icon(Icons.person, size: 30, color: Colors.white),
+          backgroundColor: Colors.grey[200], // Optional light background
+          backgroundImage: (doctorphoto?.isNotEmpty ?? false)
+              ? NetworkImage(doctorphoto!)
+              : null,
+          child: (doctorphoto?.isNotEmpty ?? false)
+              ? null
+              : const Icon(Icons.person, size: 30, color: Colors.grey),
         ),
       ],
     );
@@ -199,7 +224,8 @@ class _HomePageContentState extends State<HomePageContent> {
       ),
       child: Row(
         children: [
-          Icon(Icons.dashboard, size: 60, color: Color.fromARGB(255, 37, 99, 160)),
+          Icon(Icons.dashboard,
+              size: 60, color: Color.fromARGB(255, 25, 83, 112)),
           const SizedBox(width: 20),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,7 +235,7 @@ class _HomePageContentState extends State<HomePageContent> {
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 37, 99, 160),
+                  color: Color.fromARGB(255, 25, 83, 112),
                 ),
               ),
               SizedBox(height: 8),
@@ -231,15 +257,15 @@ class _HomePageContentState extends State<HomePageContent> {
       children: [
         Expanded(
           child: _buildActionCard(
-            icon: Icons.person,
-            label: 'View Patients',
-            onTap: () {
-             Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ConsultedPatientsListPage()),
-            );
-            }
-          ),
+              icon: Icons.person,
+              label: 'View Patients',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => ConsultedPatientsListPage()),
+                );
+              }),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -247,10 +273,11 @@ class _HomePageContentState extends State<HomePageContent> {
             icon: Icons.schedule,
             label: 'Appointments',
             onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => TodayAppointmentsPage()),
-            );
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => TodayAppointmentsPage()),
+              );
             },
           ),
         ),
@@ -282,14 +309,14 @@ class _HomePageContentState extends State<HomePageContent> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 40, color: Color.fromARGB(255, 37, 99, 160)),
+            Icon(icon, size: 40, color: Color.fromARGB(255, 25, 83, 112)),
             const SizedBox(height: 10),
             Text(
               label,
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Color.fromARGB(255, 37, 99, 160),
+                color: Color.fromARGB(255, 25, 83, 112),
               ),
             ),
           ],
@@ -306,10 +333,6 @@ class _HomePageContentState extends State<HomePageContent> {
           description: 'Check your daily patient count \n and appointments.',
         ),
         const SizedBox(height: 16),
-        _buildInsightCard(
-          title: 'Pending Tasks',
-          description: 'Review 5 pending patient reports.',
-        ),
       ],
     );
   }
@@ -333,7 +356,8 @@ class _HomePageContentState extends State<HomePageContent> {
       ),
       child: Row(
         children: [
-          Icon(Icons.bar_chart, size: 50, color: Color.fromARGB(255, 37, 99, 160)),
+          Icon(Icons.bar_chart,
+              size: 50, color: Color.fromARGB(255, 25, 83, 112)),
           const SizedBox(width: 20),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -343,7 +367,7 @@ class _HomePageContentState extends State<HomePageContent> {
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 37, 99, 160),
+                  color: Color.fromARGB(255, 25, 83, 112),
                 ),
               ),
               const SizedBox(height: 8),
@@ -393,7 +417,8 @@ class _HomePageContentState extends State<HomePageContent> {
       ),
       child: Row(
         children: [
-          Icon(Icons.settings, size: 40, color: Color.fromARGB(255, 37, 99, 160)),
+          Icon(Icons.settings,
+              size: 40, color: Color.fromARGB(255, 25, 83, 112)),
           const SizedBox(width: 16),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -403,7 +428,7 @@ class _HomePageContentState extends State<HomePageContent> {
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 37, 99, 160),
+                  color: Color.fromARGB(255, 25, 83, 112),
                 ),
               ),
               const SizedBox(height: 4),

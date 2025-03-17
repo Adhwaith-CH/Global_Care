@@ -154,10 +154,19 @@ class _ProfileState extends State<Profile> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     CircleAvatar(
-                      radius: 80,
-                      backgroundColor:  Color.fromARGB(255, 0, 0, 0),
-                      child: Icon(Icons.person, size: 120, color: Colors.white),
-                    ),
+                          radius: 80,
+                          backgroundColor:
+                              Colors.grey[200], // Optional light background
+                          backgroundImage:
+                              (userData['user_photo']?.isNotEmpty ?? false)
+                                  ? NetworkImage(userData['user_photo']!)
+                                  : null,
+                          child:
+                              (userData['user_photo']?.isNotEmpty ?? false)
+                                  ? null
+                                  : const Icon(Icons.person,
+                                      size: 30, color: Colors.grey),
+                        ),
                     SizedBox(height: 20),
                     Text(
                       userData['user_name'] ?? "Error loading",
@@ -196,8 +205,8 @@ class _ProfileState extends State<Profile> {
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Column(
                   children: [
-                    _buildDetailCard('Email',  userData['user_email'] ?? "Error loading", Icons.email),
-                    _buildDetailCard('Contact', userData['user_contact'] ?? "Error loading", Icons.phone),
+                   _buildDetailCard('Email',  userData['user_email'] ?? "Error loading", Icons.email),
+                    _buildDetailCard('Contact', userData['user_contact'].toString() ?? "Error loading", Icons.phone),
                     _buildDetailCard('Address', userData['user_address'] ?? "Error loading", Icons.location_on),
                     _buildDetailCard('Gender',  userData['user_gender'] ?? "Error loading", Icons.person),
                     _buildDetailCard('Date of Birth',  userData['user_dob'] ?? "Error loading", Icons.cake),

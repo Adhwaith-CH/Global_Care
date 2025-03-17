@@ -20,6 +20,7 @@ class _ProfileState extends State<Profile> {
    String Place = "";
    String District = "";
   String Email = "";
+  String doctorphoto ="";
   
    
 
@@ -46,6 +47,7 @@ class _ProfileState extends State<Profile> {
           .single(); // Get only one record
       setState(() {
         Name = response['doctor_name'] ?? 'No Name';
+        doctorphoto = response['doctor_photo'] ?? 'No Name';
         Email = response['doctor_email'] ?? 'No Name';
         Contact = response['doctor_contact'] ?? 'No Name';
         Address = response['doctor_address'] ?? 'No Name';
@@ -78,7 +80,7 @@ class _ProfileState extends State<Profile> {
                 value: 'edit',
                 child: Row(
                   children: [
-                    Icon(Icons.edit, color: Color.fromARGB(255, 37, 99, 160)),
+                    Icon(Icons.edit, color: Color.fromARGB(255, 25, 83, 112)),
                     SizedBox(width: 10),
                     Text('Edit Profile'),
                   ],
@@ -89,7 +91,7 @@ class _ProfileState extends State<Profile> {
                 child: Row(
                   children: [
                     Icon(Icons.history,
-                        color: Color.fromARGB(255, 37, 99, 160)),
+                        color: Color.fromARGB(255, 25, 83, 112)),
                     SizedBox(width: 10),
                     Text('View History'),
                   ],
@@ -99,7 +101,7 @@ class _ProfileState extends State<Profile> {
                 value: 'password',
                 child: Row(
                   children: [
-                    Icon(Icons.lock, color: Color.fromARGB(255, 37, 99, 160)),
+                    Icon(Icons.lock, color: Color.fromARGB(255, 25, 83, 112)),
                     SizedBox(width: 10),
                     Text('Change Password'),
                   ],
@@ -110,7 +112,7 @@ class _ProfileState extends State<Profile> {
                 child: Row(
                   children: [
                     Icon(Icons.exit_to_app,
-                        color: Color.fromARGB(255, 37, 99, 160)),
+                        color: Color.fromARGB(255, 25, 83, 112)),
                     SizedBox(width: 10),
                     Text('Logout'),
                   ],
@@ -154,17 +156,26 @@ class _ProfileState extends State<Profile> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     CircleAvatar(
-                      radius: 80,
-                      backgroundColor: Color.fromARGB(255, 37, 99, 160),
-                      child: Icon(Icons.person, size: 120, color: Colors.white),
-                    ),
+                          radius: 80,
+                          backgroundColor:
+                              Colors.grey[200], // Optional light background
+                          backgroundImage:
+                              (doctorphoto?.isNotEmpty ?? false)
+                                  ? NetworkImage(doctorphoto!)
+                                  : null,
+                          child:
+                              (doctorphoto?.isNotEmpty ?? false)
+                                  ? null
+                                  : const Icon(Icons.person,
+                                      size: 30, color: Colors.grey),
+                        ),
                     SizedBox(height: 20),
                     Text(
                       Name,
                       style: TextStyle(
                         fontSize: 36,
                         fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 37, 99, 160),
+                        color: Color.fromARGB(255, 25, 83, 112),
                       ),
                     ),
                     SizedBox(height: 8),
@@ -172,7 +183,7 @@ class _ProfileState extends State<Profile> {
                       'Global ID: 1234567890',
                       style: TextStyle(
                         fontSize: 20,
-                        color: Color.fromARGB(255, 37, 99, 160),
+                        color: Color.fromARGB(255, 25, 83, 112),
                       ),
                     ),
                   ],
@@ -181,11 +192,11 @@ class _ProfileState extends State<Profile> {
 
               // Action Buttons Section with conditional rendering
               // if (selectedOption == 'edit') ...[
-              //   _buildActionButton('Edit Profile', Icons.edit, Color.fromARGB(255, 37, 99, 160)),
+              //   _buildActionButton('Edit Profile', Icons.edit, Color.fromARGB(255, 25, 83, 112)),
               // ] else if (selectedOption == 'history') ...[
-              //   _buildActionButton('History', Icons.history, Color.fromARGB(255, 37, 99, 160)),
+              //   _buildActionButton('History', Icons.history, Color.fromARGB(255, 25, 83, 112)),
               // ] else if (selectedOption == 'password') ...[
-              //   _buildActionButton('Change Password', Icons.lock, Color.fromARGB(255, 37, 99, 160)),
+              //   _buildActionButton('Change Password', Icons.lock, Color.fromARGB(255, 25, 83, 112)),
               // ],
 
               // Divider for separating sections
@@ -257,12 +268,12 @@ class _ProfileState extends State<Profile> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.0)),
       color: Colors.white,
       child: ListTile(
-        leading: Icon(icon, color: Color.fromARGB(255, 37, 99, 160)),
+        leading: Icon(icon, color: Color.fromARGB(255, 25, 83, 112)),
         title: Text(
           title,
           style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: Color.fromARGB(255, 37, 99, 160)),
+              color: Color.fromARGB(255, 25, 83, 112)),
         ),
         subtitle: Text(
           value,

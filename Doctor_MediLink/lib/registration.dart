@@ -98,13 +98,7 @@ class _RegisterState extends State<Register> {
         password: password.text,
       );
 
-      // if (response.user != null) {
-      //   String fullName = fullname.text;
-      //   String firstName = fullName.split(' ').first;
-      //   await supabase.auth.updateUser(UserAttributes(
-      //     data: {'display_name': firstName},
-      //   ));
-      // }
+     
 
       final User? user = response.user;
 
@@ -126,6 +120,8 @@ class _RegisterState extends State<Register> {
         print("URL: $proofUrl");
         print("URL: $photoUrl");
 
+        String? gid = await getGID();
+
         await supabase.from('tbl_doctor').insert({
           'doctor_id': userId,
           'doctor_name': fullname.text,
@@ -137,7 +133,8 @@ class _RegisterState extends State<Register> {
           'doctor_address': address.text,
           'doctor_gender': selectedGender,
           'doctor_dob': dob.text,
-          'doctor_contact': contact.text
+          'doctor_contact': contact.text,
+          'doctor_gid':gid
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -155,11 +152,36 @@ class _RegisterState extends State<Register> {
     }
   }
 
+  Future<String?> getGID() async {
+  final lastUser = await supabase
+      .from('tbl_doctor')
+      .select('doctor_gid')
+      .order('doctor_gid', ascending: false)
+      .limit(1)
+      .maybeSingle(); // Get the last registered doctor
+
+  String newGID = "GDOC1001"; // Default GID
+
+  if (lastUser != null && lastUser['doctor_gid'] != null) {
+    String? lastId = lastUser['doctor_gid'] as String?;
+    if (lastId != null) {
+      int gidNumber = int.parse(lastId.replaceAll(RegExp(r'[^0-9]'), ''));
+      int newNumber = gidNumber + 1;
+      newGID = "GDOC$newNumber";
+    }
+  }
+
+  print("newGID: $newGID");
+  return newGID;
+}
+
+
+
   Future<String?> _uploadImage(File image, String userId, String type) async {
     try {
       final fileName = '$type doctor_$userId';
-      await supabase.storage.from('userdoc').upload(fileName, image);
-      final imageUrl = supabase.storage.from('userdoc').getPublicUrl(fileName);
+      await supabase.storage.from('doctordoc').upload(fileName, image);
+      final imageUrl = supabase.storage.from('doctordoc').getPublicUrl(fileName);
       return imageUrl;
     } catch (e) {
       print('Image upload failed: $e');
@@ -416,7 +438,9 @@ class _RegisterState extends State<Register> {
                     SizedBox(height: 40),
                     Center(
                       child: ElevatedButton(
-                        onPressed: _signUp,
+                        onPressed: ()  {
+                         _signUp();
+                        },
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.symmetric(
                               horizontal: 40, vertical: 15),

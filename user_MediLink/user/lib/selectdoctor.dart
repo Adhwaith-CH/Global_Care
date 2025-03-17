@@ -110,14 +110,19 @@ class _DoctorBookingState extends State<DoctorBooking> {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             CircleAvatar(
-                              radius: 50,
-                              backgroundColor: Color.fromARGB(255, 25, 83, 112),
-                              child: Icon(
-                                Icons.person,
-                                size: 50,
-                                color: Colors.white,
-                              ),
-                            ),
+                          radius: 35,
+                          backgroundColor:
+                              Colors.grey[200], // Optional light background
+                          backgroundImage:
+                              (doctor['doctor_photo']?.isNotEmpty ?? false)
+                                  ? NetworkImage(doctor['doctor_photo']!)
+                                  : null,
+                          child:
+                              (doctor['doctor_photo`']?.isNotEmpty ?? false)
+                                  ? null
+                                  : const Icon(Icons.local_hospital,
+                                      size: 30, color: Colors.grey),
+                        ),
                             const SizedBox(height: 16),
                             Text(
                               doctor['doctor_name'] ?? 'Unknown Doctor',

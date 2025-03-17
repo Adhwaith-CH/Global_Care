@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:hospital/formvalidation.dart';
 import 'package:hospital/hospitallogin.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -52,6 +53,7 @@ class _RegistrationState extends State<Registration> {
     );
     if (result != null && result.files.isNotEmpty) {
       setState(() {
+        pickedProof = result.files.first;
         _hintText = result.files.first.name; // Update hintText with file name
         _iconColor = Colors.green; // Change icon color to green
       });
@@ -105,13 +107,14 @@ class _RegistrationState extends State<Registration> {
 
   Future<void> fetchplace(String selectedDistrict) async {
     try {
-      final response =
-          await supabase.from('tbl_place').select().eq('district_id', selectedDistrict);
-          // print(response);
+      final response = await supabase
+          .from('tbl_place')
+          .select()
+          .eq('district_id', selectedDistrict);
+      // print(response);
       setState(() {
         placelist = response;
       });
-      
     } catch (e) {
       print('Exception during fetch:$e');
     }
@@ -147,7 +150,6 @@ class _RegistrationState extends State<Registration> {
           'place_id': selectedPlace,
           'hospital_address': hospital_address.text,
           'hospital_contact': hospital_contact.text,
-          // 'hospital_proof': hospital_proof.text,
         });
 
         if (pickedImage != null) {
@@ -165,7 +167,8 @@ class _RegistrationState extends State<Registration> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error:$e")));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Error:$e")));
 
       print('Sign up failed: $e');
     }
@@ -332,174 +335,180 @@ class _RegistrationState extends State<Registration> {
     );
   }
 
+  final formkey = GlobalKey<FormState>();
+
   Widget _buildRegistrationForm() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildInputField(hospital_name, 'Hospital Name', Icons.local_hospital),
-        SizedBox(height: 20),
-        _buildInputField(hospital_address, 'Address', Icons.location_on),
-        SizedBox(height: 20),
-        _buildInputField(hospital_contact, 'Contact Number', Icons.phone),
-        SizedBox(height: 20),
-        _buildInputField(hospital_email, 'Email', Icons.email),
-        SizedBox(height: 20),
-        DropdownButtonFormField<String>(
-          decoration: const InputDecoration(
-           
-            hintText: 'District',
-            prefixIcon: Icon(Icons.location_city, color: Color(0xFF0D47A1)),
-        
-        filled: true,
-        fillColor: Color(0xFFF5F5F5),
-        border: OutlineInputBorder(
-         
-          borderSide: BorderSide.none,
-        ),
-            
-          ),
-          value: selectedDistrict, //initilizee cheyunuu
-          validator: (value) {
-            if (value == "" || value!.isEmpty) {
-              return "Enter the district name";
-            }
-            return null;
-          },
-          hint: Text("select the district"),
-          onChanged: (newValue) {
-            //button click cheyubool text box ill select cheythaa valuee"newValue"leeku store cheyunuu
-            setState(() {
-              selectedDistrict =
-                  newValue; //"newValue" ill ulla value "selectedDistrict"leeku store cheyunuu
-                  fetchplace(selectedDistrict!);
-            });
-          },
-          items: districtlist.map((district) {
-            return DropdownMenuItem<String>(
-              value: district['district_id'].toString(),
-              child: Text(district['district_name']),
-            );
-          }).toList(),
-        ),
-        SizedBox(
-          height: 20,
-        ),
-        DropdownButtonFormField<String>(
-          decoration: const InputDecoration(
-            hintText: 'Place',
-            prefixIcon: Icon(Icons.location_pin, color: Color(0xFF0D47A1)),
-            filled: true,
-            fillColor: Color(0xFFF5F5F5),
-            border: OutlineInputBorder(
-              borderSide: BorderSide.none,
+    return Form(
+      key: formkey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildInputField(hospital_name, 'Hospital Name', Icons.local_hospital,
+              validator: FormValidation.validateName),
+          SizedBox(height: 20),
+          _buildInputField(hospital_address, 'Address', Icons.location_on,
+              validator: FormValidation.validateAddress),
+          SizedBox(height: 20),
+          _buildInputField(hospital_contact, 'Contact Number', Icons.phone,
+              validator: FormValidation.validateContact),
+          SizedBox(height: 20),
+          _buildInputField(hospital_email, 'Email', Icons.email,
+              validator: FormValidation.validateEmail),
+          SizedBox(height: 20),
+          DropdownButtonFormField<String>(
+            decoration: const InputDecoration(
+              hintText: 'District',
+              prefixIcon: Icon(Icons.location_city, color: Color(0xFF0D47A1)),
+              filled: true,
+              fillColor: Color(0xFFF5F5F5),
+              border: OutlineInputBorder(
+                borderSide: BorderSide.none,
+              ),
             ),
-          ),
-          value: selectedPlace, //initilizee cheyunuu
-          validator: (value) {
-            if (value == "" || value!.isEmpty) {
-              return "Enter the Place name";
-            }
-            return null;
-          },
-          hint: Text("select the Place"),
-          onChanged: (newValue) {
-            //button click cheyubool text box ill select cheythaa valuee"newValue"leeku store cheyunuu
-            setState(() {
-              selectedPlace =
-                  newValue; //"newValue" ill ulla value "selectedDistrict"leeku store cheyunuu
-                print(selectedPlace);
-            });
-          },
-          items: placelist.map((place) {
-            return DropdownMenuItem<String>(
-              value: place['place_id'].toString(),
-              child: Text(place['place_name']),
-            );
-          }).toList(),
-        ),
-        SizedBox(
-          height: 20,
-        ),
-        TextFormField(
-          readOnly: true, // Prevent manual text input
-          decoration: InputDecoration(
-            prefixIcon:
-                Icon(Icons.verified, color: _iconColor), // Dynamic icon color
-            hintText: _hintText, // Dynamic hintText
-            filled: true,
-            fillColor: Color(0xFFF5F5F5),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide.none,
-            ),
-            contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-            suffixIcon: IconButton(
-              icon: Icon(Icons.upload_file,
-                  color: _iconColor), // Dynamic icon color
-              onPressed: handleProofUpload, // Trigger file selection
-            ),
-          ),
-          onTap:
-              handleProofUpload, // Trigger file picker when user taps on the field
-        ),
-        SizedBox(height: 20),
-        _buildInputField(hospital_password, 'Password', Icons.lock,
-            obscureText: true),
-        SizedBox(height: 20),
-        Center(
-          child: ElevatedButton(
-            onPressed: () {
-              _signUp();
+            value: selectedDistrict, //initilizee cheyunuu
+            validator: (value) => FormValidation.validateDropdown(value),
+            hint: Text("select the district"),
+            onChanged: (newValue) {
+              //button click cheyubool text box ill select cheythaa valuee"newValue"leeku store cheyunuu
+              setState(() {
+                selectedDistrict =
+                    newValue; //"newValue" ill ulla value "selectedDistrict"leeku store cheyunuu
+                fetchplace(selectedDistrict!);
+              });
             },
-            style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-              backgroundColor: Color(0xFF0D47A1),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
+            items: districtlist.map((district) {
+              return DropdownMenuItem<String>(
+                value: district['district_id'].toString(),
+                child: Text(district['district_name']),
+              );
+            }).toList(),
+          ),
+          SizedBox(
+            height: 20,
+          ),
+          DropdownButtonFormField<String>(
+            decoration: const InputDecoration(
+              hintText: 'Place',
+              prefixIcon: Icon(Icons.location_pin, color: Color(0xFF0D47A1)),
+              filled: true,
+              fillColor: Color(0xFFF5F5F5),
+              border: OutlineInputBorder(
+                borderSide: BorderSide.none,
               ),
             ),
-            child: Text(
-              'Register',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.white,
+            value: selectedPlace, //initilizee cheyunuu
+            validator: (value) => FormValidation.validateDropdown(value),
+            hint: Text("select the Place"),
+            onChanged: (newValue) {
+              //button click cheyubool text box ill select cheythaa valuee"newValue"leeku store cheyunuu
+              setState(() {
+                selectedPlace =
+                    newValue; //"newValue" ill ulla value "selectedDistrict"leeku store cheyunuu
+                print(selectedPlace);
+              });
+            },
+            items: placelist.map((place) {
+              return DropdownMenuItem<String>(
+                value: place['place_id'].toString(),
+                child: Text(place['place_name']),
+              );
+            }).toList(),
+          ),
+          SizedBox(
+            height: 20,
+          ),
+          TextFormField(
+            readOnly: true, // Prevent manual text input
+            decoration: InputDecoration(
+              prefixIcon:
+                  Icon(Icons.verified, color: _iconColor), // Dynamic icon color
+              hintText: _hintText, // Dynamic hintText
+              filled: true,
+              fillColor: Color(0xFFF5F5F5),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+              suffixIcon: IconButton(
+                icon: Icon(Icons.upload_file,
+                    color: _iconColor), // Dynamic icon color
+                onPressed: handleProofUpload, // Trigger file selection
+              ),
+            ),
+            onTap:
+                handleProofUpload, // Trigger file picker when user taps on the field
+          ),
+          SizedBox(height: 20),
+          _buildInputField(hospital_password, 'Password', Icons.lock,validator: FormValidation.validatePassword,
+              obscureText: true),
+          SizedBox(height: 20),
+          Center(
+            child: ElevatedButton(
+              onPressed: () {
+                if (formkey.currentState!.validate()) {
+                  print("Image: $pickedImage");
+                  print("Proof: $pickedProof");
+                  if (pickedImage != null && pickedProof != null) {
+                    _signUp();
+                  } else {
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text("Upload file")));
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                backgroundColor: Color(0xFF0D47A1),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+              child: Text(
+                'Register',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 70, top: 20),
-          child: Center(
-            child: Row(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 290),
-                  child: Text(
-                    'Already have an account? ',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black54,
+          Padding(
+            padding: const EdgeInsets.only(left: 70, top: 20),
+            child: Center(
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 290),
+                    child: Text(
+                      'Already have an account? ',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black54,
+                      ),
                     ),
                   ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Hospitallogin()),
-                    );
-                  },
-                  child: Text(
-                    "Sign in",
-                    style: TextStyle(color: Colors.black54, fontSize: 16),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => Hospitallogin()),
+                      );
+                    },
+                    child: Text(
+                      "Sign in",
+                      style: TextStyle(color: Colors.black54, fontSize: 16),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -509,12 +518,14 @@ class _RegistrationState extends State<Registration> {
     IconData icon, {
     bool obscureText = false,
     void Function()? onTap,
+    String? Function(String?)? validator, // New parameter for validation
   }) {
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
       onTap: onTap,
       readOnly: onTap != null,
+      validator: validator, // Pass the validator function
       decoration: InputDecoration(
         prefixIcon: Icon(icon, color: Color(0xFF0D47A1)),
         hintText: hintText,

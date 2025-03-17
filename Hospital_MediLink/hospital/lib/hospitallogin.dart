@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hospital/formvalidation.dart';
 import 'package:hospital/homepage.dart';
 import 'package:hospital/hospitalregisteration.dart';
 import 'package:hospital/main.dart';
@@ -108,59 +109,67 @@ class _MyWidgetState extends State<Hospitallogin> {
     );
   }
 
+  final formkey = GlobalKey<FormState>();
+
   Widget _buildLoginForm() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildInputField(_emailEditingController, 'Email', Icons.email),
-        SizedBox(height: 20),
-        _buildInputField(_passwordEditingController, 'Password', Icons.lock,
-            obscureText: true),
-        SizedBox(height: 40),
-        Center(
-          child: ElevatedButton(
-            onPressed: () {
-             signIn();
-            },
-            style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-              backgroundColor: Color(0xFF0D47A1),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
+    return Form(
+      key: formkey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildInputField(_emailEditingController, 'Email', Icons.email,
+              validator: FormValidation.validateEmail),
+          SizedBox(height: 20),
+          _buildInputField(_passwordEditingController, 'Password', Icons.lock,
+              validator: FormValidation.validatePassword, obscureText: true),
+          SizedBox(height: 40),
+          Center(
+            child: ElevatedButton(
+              onPressed: () {
+                if (formkey.currentState!.validate()) {
+                  signIn();
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                backgroundColor: Color(0xFF0D47A1),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
               ),
-            ),
-            child: Text(
-              'Login',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.white,
+              child: Text(
+                'Login',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
-        ),
-        SizedBox(height: 20),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              "Don't have an account?",
-              style: TextStyle(color: Colors.grey.shade600),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => Registration()),
-                );
-              },
-              child: Text(
-                "Sign Up",
-                style: TextStyle(color: Colors.black54),
+          SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                "Don't have an account?",
+                style: TextStyle(color: Colors.grey.shade600),
               ),
-            ),
-          ],
-        ),
-      ],
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Registration()),
+                  );
+                },
+                child: Text(
+                  "Sign Up",
+                  style: TextStyle(color: Colors.black54),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -169,8 +178,10 @@ class _MyWidgetState extends State<Hospitallogin> {
     String hintText,
     IconData icon, {
     bool obscureText = false,
+    String? Function(String?)? validator, // New parameter for validation
   }) {
     return TextFormField(
+      validator: validator,
       controller: controller,
       obscureText: obscureText,
       decoration: InputDecoration(

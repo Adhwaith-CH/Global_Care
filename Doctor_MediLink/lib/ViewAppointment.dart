@@ -12,7 +12,7 @@ class _ViewappointmentState extends State<Viewappointment> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(backgroundColor: Color.fromARGB(255, 37, 99, 160)),
+      appBar: AppBar(backgroundColor: Color.fromARGB(255, 25, 83, 112)),
       body: Container(
         child: Column(
           children: [
@@ -136,7 +136,7 @@ class _ViewappointmentState extends State<Viewappointment> {
                width: double.infinity,
                height: 130,
                decoration: BoxDecoration(
-                 color: Color.fromARGB(255, 37, 99, 160), // A solid teal shade for the container
+                 color: Color.fromARGB(255, 25, 83, 112), // A solid teal shade for the container
                  //borderRadius: BorderRadius.circular(20),
                  boxShadow: [
                    BoxShadow(
@@ -155,7 +155,7 @@ class _ViewappointmentState extends State<Viewappointment> {
                      child: Icon(
                        Icons.person, // Default profile icon
                        size: 40,
-                       color: Color.fromARGB(255, 37, 99, 160), // Matches container theme
+                       color: Color.fromARGB(255, 25, 83, 112), // Matches container theme
                      ),
                    ),
                    title: Text(

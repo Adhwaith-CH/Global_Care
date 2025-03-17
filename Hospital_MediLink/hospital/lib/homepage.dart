@@ -6,6 +6,7 @@ import 'package:hospital/appointments.dart';
 import 'package:hospital/findperson.dart';
 import 'package:hospital/managestaff.dart';
 import 'package:hospital/attendence.dart';
+import 'package:hospital/profile.dart';
 import 'package:hospital/viewdoctor.dart';
 
 class Homepage extends StatefulWidget {
@@ -136,12 +137,12 @@ final ScrollController _scrollController = ScrollController();
                             );
                           },
                         ),
-                        _buildGridCard(context, "Manage Staff", Icons.group, () {
+                        _buildGridCard(context, "Manage Account", Icons.group, () {
                           // Navigate to Manage Staff screen
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => HospitalStaffManagementPage()),
+                                  builder: (context) => HospitalProfile()),
                             );
                         }),
                         _buildGridCard(

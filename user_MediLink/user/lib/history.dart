@@ -1,6 +1,70 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:user/main.dart';
+import 'package:user/pdfviewer.dart';
 
-class PatientHealthHistoryPage extends StatelessWidget {
+class PatientHealthHistoryPage extends StatefulWidget {
+  @override
+  State<PatientHealthHistoryPage> createState() =>
+      _PatientHealthHistoryPageState();
+}
+
+class _PatientHealthHistoryPageState extends State<PatientHealthHistoryPage> {
+  List<Map<String, dynamic>> historyList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchhistory();
+  }
+
+  Future<void> fetchhistory() async {
+    try {
+      final response = await supabase.from('tbl_summary').select(
+          '*, tbl_appointment(*, tbl_availability(*, tbl_doctor(*, tbl_hospitaldepartment(*, tbl_department(*)))))');
+
+      debugPrint('Fetched History Data: ${response.toString()}'); // Debugging
+
+      setState(() {
+        historyList = List<Map<String, dynamic>>.from(response);
+      });
+    } catch (e) {
+      debugPrint('Error fetching history: ${e.toString()}');
+    }
+  }
+
+  void _viewDocument(String fileUrl) async {
+    if (fileUrl.isEmpty || !fileUrl.startsWith('http')) {
+      debugPrint('⚠️ Invalid File URL: $fileUrl');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Invalid file URL'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    debugPrint('📂 Attempting to open: $fileUrl'); // Debugging log
+
+    Uri uri = Uri.parse(fileUrl);
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri,
+          mode: LaunchMode.externalApplication); // Opens in external browser
+    } else {
+      debugPrint('❌ Could not open file: $fileUrl');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not open file'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,7 +82,10 @@ class PatientHealthHistoryPage extends StatelessWidget {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [const Color.fromARGB(255, 247, 243, 243), const Color.fromARGB(255, 218, 228, 238)],
+            colors: [
+              const Color.fromARGB(255, 247, 243, 243),
+              const Color.fromARGB(255, 218, 228, 238)
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -27,7 +94,6 @@ class PatientHealthHistoryPage extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              _buildPatientInfo(),
               SizedBox(height: 20),
               Expanded(
                 child: ListView(
@@ -43,32 +109,6 @@ class PatientHealthHistoryPage extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildPatientInfo() {
-    return Card(
-      color: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 3,
-      child: ListTile(
-        contentPadding: EdgeInsets.all(12),
-        leading: CircleAvatar(
-          radius: 50,
-          backgroundColor: Color.fromARGB(255, 15, 67, 94),
-          child: Icon(
-            Icons.person,
-            size: 50,
-            color: Colors.white,
-          ),
-        ),
-        title: Text(
-          'John Doe',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text('Age: 32 | ID: #12345'),
-        trailing: Icon(Icons.info_outline, color: Colors.blueGrey),
       ),
     );
   }
@@ -90,39 +130,170 @@ class PatientHealthHistoryPage extends StatelessWidget {
     );
   }
 
+  /// ✅ Modified `_buildMedicalHistoryList()` to display `summary_title` & expand to show `summary_description`
   Widget _buildMedicalHistoryList() {
-    List<String> conditions = ['Diabetes', 'Hypertension', 'Asthma'];
+    if (historyList.isEmpty) {
+      return Center(child: Text("No medical history available"));
+    }
+
     return Column(
-      children:
-          conditions.map((condition) => _buildListTile(condition)).toList(),
+      children: historyList.map((history) {
+        return Card(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: 2,
+          margin: EdgeInsets.symmetric(vertical: 5),
+          child: ExpansionTile(
+            title: Text(
+              history['summary_title'] ?? 'No Title',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            ),
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Text(
+                  history['summary_description'] ?? 'No Description Available',
+                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 
   Widget _buildAppointmentList() {
-    List<Map<String, String>> appointments = [
-      {'date': '2025-02-20', 'doctor': 'Dr. Smith', 'diagnosis': 'Flu'},
-      {'date': '2025-01-15', 'doctor': 'Dr. Brown', 'diagnosis': 'Migraine'},
-    ];
     return Column(
-      children: appointments
-          .map((appt) => _buildListTile(
-              '${appt['date']} - ${appt['doctor']} - ${appt['diagnosis']}'))
-          .toList(),
+      children: historyList.map((appt) {
+        return ListTile(
+          title: Text(
+              '${appt['tbl_appointment']['appointment_date']} - ${appt['tbl_appointment']['tbl_availability']['tbl_doctor']['doctor_name']} - ${appt['tbl_appointment']['tbl_availability']['tbl_doctor']['tbl_hospitaldepartment']['tbl_department']['department_name']}'),
+          trailing: Icon(Icons.arrow_forward_ios, size: 18, color: Colors.grey),
+        );
+      }).toList(),
     );
   }
 
   Widget _buildReportList() {
-    List<String> reports = ['Blood Test - Jan 2025', 'X-ray - Dec 2024'];
     return Column(
-      children: reports.map((report) => _buildListTile(report)).toList(),
+      children: historyList.map((report) {
+        List<String> documentUrls = [];
+
+        if (report['summary_document'] is String) {
+          try {
+            String rawData = report['summary_document'].trim();
+
+            // ✅ Remove { } if it's wrapped in them
+            if (rawData.startsWith('{') && rawData.endsWith('}')) {
+              rawData = rawData.substring(1, rawData.length - 1);
+            }
+
+            // ✅ Extract URLs properly
+            List<String> extractedUrls = rawData
+                .replaceAll('"', '') // Remove quotes
+                .split(',')
+                .map((e) => e.trim()) // Trim spaces
+                .where((e) => e.startsWith('http')) // Keep only valid URLs
+                .toList();
+
+            documentUrls = extractedUrls;
+          } catch (e) {
+            debugPrint('❌ Error parsing summary_document: $e');
+          }
+        } else if (report['summary_document'] is List) {
+          documentUrls = List<String>.from(report['summary_document']);
+        }
+
+        debugPrint("✅ Extracted File URLs: $documentUrls"); // Debugging
+
+        return Card(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: 2,
+          margin: EdgeInsets.symmetric(vertical: 5),
+          child: ListTile(
+            title: Text(
+                '${report['summary_file'] ?? 'Unknown File'} - ${report['tbl_appointment']['appointment_date'] ?? 'No Date'}'),
+            trailing: documentUrls.isNotEmpty
+                ? PopupMenuButton<String>(
+                    icon: Icon(Icons.more_vert, color: Colors.grey),
+                    onSelected: (String url) {
+                      showReport(url, context);
+                    },
+                    itemBuilder: (BuildContext context) {
+                      return documentUrls.map((String url) {
+                        return PopupMenuItem<String>(
+                          value: url,
+                          child: Row(
+                            children: [
+                              Icon(Icons.visibility, color: Colors.blue),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  Uri.decodeComponent(url
+                                      .split('/')
+                                      .last), // ✅ Decode for readable names
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList();
+                    },
+                  )
+                : null, // Hide menu if no documents
+          ),
+        );
+      }).toList(),
     );
   }
 
-  Widget _buildListTile(String text) {
-    return ListTile(
-      title: Text(text),
-      trailing: Icon(Icons.arrow_forward_ios, size: 18, color: Colors.grey),
-      contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+ void showReport(String fileUrl, BuildContext context) {
+  if (fileUrl.toLowerCase().endsWith('.pdf')) {
+    // ✅ Open PDF in a new screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => PdfViewerPage(pdfUrl: fileUrl)),
+    );
+  } else {
+    // ✅ Show Image in a Dialog
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content: Container(
+            width: MediaQuery.of(context).size.width * 0.8,
+            height: MediaQuery.of(context).size.height * 0.6,
+            child: Image.network(
+              fileUrl,
+              fit: BoxFit.contain,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Center(child: CircularProgressIndicator());
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return Center(
+                  child: Text(
+                    "⚠️ Could not load image",
+                    style: TextStyle(color: Colors.red),
+                  ),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Close"),
+            ),
+          ],
+        );
+      },
     );
   }
+}
+
+
 }
