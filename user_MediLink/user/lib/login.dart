@@ -43,9 +43,10 @@ class _LoginpageState extends State<Loginpage> {
         );
       }
     } catch (e) {
+      print("Error: ${e.toString()}");
       // Handle any errors that occur during sign-in
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: ${e.toString()}")),
+        SnackBar(content: Text("Sign In Failed")),
       );
     }
   }
