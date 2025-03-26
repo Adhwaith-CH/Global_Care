@@ -36,9 +36,8 @@ class _FinduserState extends State<Finduser> {
   void filterUsers(String query) {
     setState(() {
       filteredUsers = users
-          .where((user) => user['user_gid']
-              .toLowerCase()
-              .contains(query.toLowerCase()))
+          .where((user) =>
+              user['user_gid'].toLowerCase().contains(query.toLowerCase()))
           .toList();
     });
   }
@@ -77,7 +76,8 @@ class _FinduserState extends State<Finduser> {
           child: Column(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(30),
@@ -91,7 +91,8 @@ class _FinduserState extends State<Finduser> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.search, color: Color.fromARGB(255, 25, 83, 112)),
+                    const Icon(Icons.search,
+                        color: Color.fromARGB(255, 25, 83, 112)),
                     const SizedBox(width: 10),
                     Expanded(
                       child: TextField(
@@ -115,9 +116,13 @@ class _FinduserState extends State<Finduser> {
                         itemBuilder: (context, index) {
                           final user = filteredUsers[index];
                           return buildUserCard(
-                            name: user['user_name'],
-                            userId: user['user_gid'],
-                            profileColor: const Color.fromARGB(255, 25, 83, 112),
+                            name: user['user_name'] ?? 'Unknown',
+                            userId: user['user_gid'] ?? 'N/A',
+                            uid: user['user_id'] ?? '',
+                            profileColor:
+                                const Color.fromARGB(255, 25, 83, 112),
+                            userPhoto:
+                                user['user_photo'], // ✅ Passing userPhoto here
                           );
                         },
                       ),
@@ -129,7 +134,13 @@ class _FinduserState extends State<Finduser> {
     );
   }
 
-  Widget buildUserCard({required String name, required String userId, required Color profileColor}) {
+  Widget buildUserCard({
+    required String name,
+    required String userId,
+    required String uid,
+    required Color profileColor,
+    required String? userPhoto,
+  }) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       width: double.infinity,
@@ -148,9 +159,14 @@ class _FinduserState extends State<Finduser> {
       child: Row(
         children: [
           CircleAvatar(
-            radius: 35,
-            backgroundColor: profileColor,
-            child: const Icon(Icons.person, size: 40, color: Colors.white),
+            radius: 30,
+            backgroundColor: Colors.grey[200],
+            backgroundImage: (userPhoto != null && userPhoto.isNotEmpty)
+                ? NetworkImage(userPhoto)
+                : null,
+            child: (userPhoto == null || userPhoto.isEmpty)
+                ? const Icon(Icons.person, size: 30, color: Colors.grey)
+                : null,
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -180,7 +196,9 @@ class _FinduserState extends State<Finduser> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => UserProfilePage()),
+                MaterialPageRoute(
+                  builder: (context) => UserProfilePage(uid: uid),
+                ),
               );
             },
             style: ElevatedButton.styleFrom(

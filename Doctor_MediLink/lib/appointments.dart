@@ -20,7 +20,7 @@ class _TodayAppointmentsPageState extends State<TodayAppointmentsPage> {
   Future<void> fetchappointments() async {
     try {
       final response =
-          await supabase.from('tbl_appointment').select('*, tbl_user(*)');
+          await supabase.from('tbl_appointment').select('*, tbl_user(*)').eq('appointment_status', 0);
       print(response);
       setState(() {
         appointments = response;

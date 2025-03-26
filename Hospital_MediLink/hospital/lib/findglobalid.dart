@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hospital/main.dart';
+import 'package:hospital/userprofile.dart';
 
 class GlobalIDSearch extends StatefulWidget {
   const GlobalIDSearch({super.key});
@@ -9,64 +11,50 @@ class GlobalIDSearch extends StatefulWidget {
 
 class _GlobalIDSearchState extends State<GlobalIDSearch> {
   final TextEditingController _searchController = TextEditingController();
-  String? _searchResult;
+  List<Map<String, dynamic>> patients = [];
+  List<Map<String, dynamic>> filteredPatients =
+      []; // Add filtered patients list
 
-  // Sample List of Patients
-  final List<Map<String, String>> patients = [
-    {
-      "name": "John Doe",
-      "globalId": "GID001",
-      "photo": "https://via.placeholder.com/100"
-    },
-    {
-      "name": "Jane Smith",
-      "globalId": "GID002",
-      "photo": "https://via.placeholder.com/100"
-    },
-    {
-      "name": "Michael Johnson",
-      "globalId": "GID003",
-      "photo": "https://via.placeholder.com/100"
-    },
-    {
-      "name": "Emily Davis",
-      "globalId": "GID004",
-      "photo": "https://via.placeholder.com/100"
-    },
-    {
-      "name": "John Doe",
-      "globalId": "GID001",
-      "photo": "https://via.placeholder.com/100"
-    },
-    {
-      "name": "Jane Smith",
-      "globalId": "GID002",
-      "photo": "https://via.placeholder.com/100"
-    },
-    {
-      "name": "Michael Johnson",
-      "globalId": "GID003",
-      "photo": "https://via.placeholder.com/100"
-    },
-    {
-      "name": "Emily Davis",
-      "globalId": "GID004",
-      "photo": "https://via.placeholder.com/100"
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    fetchUsers();
+  }
+
+  Future<void> fetchUsers() async {
+    try {
+      final response = await supabase.from('tbl_user').select();
+      List<Map<String, dynamic>> users = [];
+      for (var data in response) {
+        users.add({
+          'id': data['user_id'],
+          'name': data['user_name'],
+          'globalId': data['user_gid'],
+          "photo": data['user_photo'] ?? "",
+        });
+      }
+      setState(() {
+        patients = users;
+        filteredPatients = users; // Initially show all patients
+      });
+    } catch (e) {
+      print("Error fetching data: $e");
+    }
+  }
 
   void _searchUser() {
-    String globalId = _searchController.text.trim();
-    if (globalId.isNotEmpty) {
-      setState(() {
-        _searchResult = "🔍 Searching for user with Global ID: $globalId";
-      });
-      // Implement actual search logic here
-    } else {
-      setState(() {
-        _searchResult = "⚠️ Please enter a valid Global ID.";
-      });
-    }
+    String searchQuery = _searchController.text.trim();
+
+    setState(() {
+      if (searchQuery.isEmpty) {
+        filteredPatients = patients; // Show all patients when search is empty
+      } else {
+        filteredPatients = patients
+            .where((patient) =>
+                patient['globalId'].toString().contains(searchQuery))
+            .toList();
+      }
+    });
   }
 
   @override
@@ -113,14 +101,13 @@ class _GlobalIDSearchState extends State<GlobalIDSearch> {
                           borderRadius: BorderRadius.circular(15),
                           borderSide: BorderSide.none,
                         ),
-                        prefixIcon: Icon(Icons.person_search, color: Color(0xFF0277BD)),
+                        prefixIcon:
+                            Icon(Icons.person_search, color: Color(0xFF0277BD)),
                         suffixIcon: IconButton(
                           icon: Icon(Icons.clear, color: Colors.redAccent),
                           onPressed: () {
                             _searchController.clear();
-                            setState(() {
-                              _searchResult = null;
-                            });
+                            _searchUser(); // Update filtered list when cleared
                           },
                         ),
                       ),
@@ -159,34 +146,11 @@ class _GlobalIDSearchState extends State<GlobalIDSearch> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 20),
-                    if (_searchResult != null)
-                      AnimatedOpacity(
-                        duration: Duration(milliseconds: 400),
-                        opacity: _searchResult != null ? 1 : 0,
-                        child: Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.5),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Text(
-                            _searchResult!,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
                   ],
                 ),
               ),
 
-              SizedBox(width: 30), // Space between two cards
+              SizedBox(width: 30),
 
               // Second Card: Grid of Patients
               Container(
@@ -216,61 +180,81 @@ class _GlobalIDSearchState extends State<GlobalIDSearch> {
                       ),
                     ),
                     SizedBox(height: 15),
-
-                    // Patient Grid
                     Expanded(
-                      child: GridView.builder(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2, // 2 columns
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                          childAspectRatio: 3.4, // Adjust height-width ratio
-                        ),
-                        itemCount: patients.length,
-                        itemBuilder: (context, index) {
-                          final patient = patients[index];
-                          return Card(
-                            elevation: 5,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  CircleAvatar(
-                                    radius: 30,
-                                    backgroundImage: NetworkImage(patient["photo"]!),
-                                  ),
-                                  SizedBox(height: 10),
-                                  Column(
-                                    children: [
-                                      Text(
-                                        patient["name"]!,
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      SizedBox(height: 5),
-                                      Text(
-                                        "ID: ${patient["globalId"]!}",
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.grey[700],
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                      child: filteredPatients.isEmpty
+                          ? Center(
+                              child: Text(
+                                "No matching patients found",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[700],
+                                ),
                               ),
+                            )
+                          : GridView.builder(
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 10,
+                                mainAxisSpacing: 10,
+                                childAspectRatio: 3.4,
+                              ),
+                              itemCount: filteredPatients.length,
+                              itemBuilder: (context, index) {
+                                final patient = filteredPatients[index];
+                                return GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(context, MaterialPageRoute(builder: (context) => UserProfilePage(id: patient['id']),));
+                                  },
+                                  child: Card(
+                                    elevation: 5,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(15),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(12),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 30,
+                                            backgroundImage:
+                                                NetworkImage(patient["photo"]!),
+                                          ),
+                                          SizedBox(height: 10),
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                                left: 20, top: 20),
+                                            child: Column(
+                                              children: [
+                                                Text(
+                                                  patient["name"]!,
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                SizedBox(height: 5),
+                                                Text(
+                                                  "ID: ${patient["globalId"]!}",
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    color: Colors.grey[700],
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
                     ),
                   ],
                 ),

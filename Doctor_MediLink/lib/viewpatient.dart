@@ -69,8 +69,25 @@ class _ConsultedPatientsListPageState extends State<ConsultedPatientsListPage> {
                     Row(
                       children: [
                         CircleAvatar(
-                          backgroundColor: Color.fromARGB(255, 25, 83, 112),
-                          child: Icon(Icons.person, color: Colors.white),
+                          radius: 30,
+                          backgroundColor: Colors.grey[200],
+                          backgroundImage: (appointment != null &&
+                                  appointment.isNotEmpty &&
+                                  appointment["tbl_user"]['user_photo'] !=
+                                      null &&
+                                  appointment["tbl_user"]['user_photo']
+                                      .isNotEmpty)
+                              ? NetworkImage(
+                                  appointment["tbl_user"]['user_photo'])
+                              : null,
+                          child: (appointment == null ||
+                                  appointment.isEmpty ||
+                                  appointment["tbl_user"]['user_photo'] ==
+                                      null ||
+                                  appointment["tbl_user"]['user_photo'].isEmpty)
+                              ? const Icon(Icons.person,
+                                  size: 30, color: Colors.grey)
+                              : null,
                         ),
                         const SizedBox(width: 12),
                         Column(
@@ -273,110 +290,118 @@ class _PatientSummaryPageState extends State<PatientSummaryPage> {
                       style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                     ),
                     SizedBox(height: 8),
-                   fileUrls.isNotEmpty
-    ? Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Documents:",
-            style: TextStyle(
-                fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
-          ),
-          SizedBox(height: 8),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2, // Set number of columns
-              crossAxisSpacing: 10, // Space between columns
-              mainAxisSpacing: 10, // Space between rows
-              childAspectRatio: 0.7, // Adjust as needed
-            ),
-            itemCount: fileUrls.length,
-            itemBuilder: (context, index) {
-              final url = fileUrls[index];
-              if (isImage(url)) {
-                return GestureDetector(
-                  onTap: () {
-                    showImage(context, url);
-                  },
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.network(
-                      url,
-                      height: 200,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          height: 200,
-                          color: Colors.grey[200],
-                          child: Icon(Icons.broken_image, color: Colors.grey),
-                        );
-                      },
-                    ),
-                  ),
-                );
-              } else if (isPDF(url)) {
-                return GestureDetector(
-                  onTap: () {
-                    launchUrl(Uri.parse(url));
-                  },
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Container(
-                        height: 200,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: Colors.white,
-                        ),
-                        child: PdfDocumentLoader.openFile(
-                          url,
-                          pageNumber: 1,
-                          pageBuilder: (context, textureBuilder, pageSize) =>
-                              textureBuilder(),
-                        ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 5,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          Icons.picture_as_pdf,
-                          size: 40,
-                          color: Colors.red,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              } else {
-                return ListTile(
-                  leading: Icon(Icons.insert_drive_file, color: Colors.blue),
-                  title: Text("Document ${index + 1}"),
-                  onTap: () => launchUrl(Uri.parse(url)),
-                );
-              }
-            },
-          ),
-        ],
-      )
-    : Text(
-        "No documents available",
-        style: TextStyle(fontSize: 16),
-      ),
-
+                    fileUrls.isNotEmpty
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Documents:",
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black),
+                              ),
+                              SizedBox(height: 8),
+                              GridView.builder(
+                                shrinkWrap: true,
+                                physics: NeverScrollableScrollPhysics(),
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2, // Set number of columns
+                                  crossAxisSpacing: 10, // Space between columns
+                                  mainAxisSpacing: 10, // Space between rows
+                                  childAspectRatio: 0.7, // Adjust as needed
+                                ),
+                                itemCount: fileUrls.length,
+                                itemBuilder: (context, index) {
+                                  final url = fileUrls[index];
+                                  if (isImage(url)) {
+                                    return GestureDetector(
+                                      onTap: () {
+                                        showImage(context, url);
+                                      },
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: Image.network(
+                                          url,
+                                          height: 200,
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (context, error, stackTrace) {
+                                            return Container(
+                                              height: 200,
+                                              color: Colors.grey[200],
+                                              child: Icon(Icons.broken_image,
+                                                  color: Colors.grey),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    );
+                                  } else if (isPDF(url)) {
+                                    return GestureDetector(
+                                      onTap: () {
+                                        launchUrl(Uri.parse(url));
+                                      },
+                                      child: Stack(
+                                        alignment: Alignment.center,
+                                        children: [
+                                          Container(
+                                            height: 200,
+                                            width: double.infinity,
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              color: Colors.white,
+                                            ),
+                                            child: PdfDocumentLoader.openFile(
+                                              url,
+                                              pageNumber: 1,
+                                              pageBuilder: (context,
+                                                      textureBuilder,
+                                                      pageSize) =>
+                                                  textureBuilder(),
+                                            ),
+                                          ),
+                                          Container(
+                                            padding: EdgeInsets.all(10),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              shape: BoxShape.circle,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black26,
+                                                  blurRadius: 5,
+                                                  spreadRadius: 2,
+                                                ),
+                                              ],
+                                            ),
+                                            child: Icon(
+                                              Icons.picture_as_pdf,
+                                              size: 40,
+                                              color: Colors.red,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  } else {
+                                    return ListTile(
+                                      leading: Icon(Icons.insert_drive_file,
+                                          color: Colors.blue),
+                                      title: Text("Document ${index + 1}"),
+                                      onTap: () => launchUrl(Uri.parse(url)),
+                                    );
+                                  }
+                                },
+                              ),
+                            ],
+                          )
+                        : Text(
+                            "No documents available",
+                            style: TextStyle(fontSize: 16),
+                          ),
                   ],
                 ),
               ),

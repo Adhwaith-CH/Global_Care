@@ -12,6 +12,8 @@ class DoctorBooking extends StatefulWidget {
 
 class _DoctorBookingState extends State<DoctorBooking> {
   List<Map<String, dynamic>> doctorsList = [];
+  List<Map<String, dynamic>> filteredDoctorsList = [];
+  TextEditingController searchController = TextEditingController();
 
   Future<void> fetchdoctors() async {
     try {
@@ -19,20 +21,35 @@ class _DoctorBookingState extends State<DoctorBooking> {
           .from('tbl_doctor')
           .select('*, tbl_hospitaldepartment(*,tbl_department(*))')
           .eq("hospitaldepartment_id", widget.deptid);
-      print(response);
+      
       setState(() {
-        doctorsList = response;
+        doctorsList = List<Map<String, dynamic>>.from(response);
+        filteredDoctorsList = doctorsList; // Initialize with full list
       });
     } catch (e) {
       print('Exception during fetch: $e');
     }
   }
 
+  void _filterDoctors(String query) {
+    setState(() {
+      filteredDoctorsList = doctorsList.where((doctor) {
+        final doctorName = (doctor['doctor_name'] ?? '').toLowerCase();
+        final departmentName = (doctor['tbl_hospitaldepartment']['tbl_department']['department_name'] ?? '').toLowerCase();
+        final searchLower = query.toLowerCase();
+
+        return doctorName.contains(searchLower) || departmentName.contains(searchLower);
+      }).toList();
+    });
+  }
+
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     fetchdoctors();
+    searchController.addListener(() {
+      _filterDoctors(searchController.text);
+    });
   }
 
   @override
@@ -41,7 +58,7 @@ class _DoctorBookingState extends State<DoctorBooking> {
       body: Container(
         height: double.infinity,
         decoration: BoxDecoration(
-           gradient: LinearGradient(
+          gradient: LinearGradient(
             colors: [const Color.fromARGB(255, 247, 243, 243), const Color.fromARGB(255, 218, 228, 238)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -72,8 +89,9 @@ class _DoctorBookingState extends State<DoctorBooking> {
                       children: [
                         Expanded(
                           child: TextField(
+                            controller: searchController,
                             decoration: InputDecoration(
-                              hintText: 'Search doctors...',
+                              hintText: 'Search by doctor or department...',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -94,7 +112,7 @@ class _DoctorBookingState extends State<DoctorBooking> {
                 const SizedBox(height: 16),
 
                 // Doctor List Vertical Card Design
-                for (var doctor in doctorsList)
+                for (var doctor in filteredDoctorsList)
                   Container(
                     width: double.infinity,
                     child: Card(
@@ -110,19 +128,15 @@ class _DoctorBookingState extends State<DoctorBooking> {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             CircleAvatar(
-                          radius: 35,
-                          backgroundColor:
-                              Colors.grey[200], // Optional light background
-                          backgroundImage:
-                              (doctor['doctor_photo']?.isNotEmpty ?? false)
+                              radius: 35,
+                              backgroundColor: Colors.grey[200], // Optional light background
+                              backgroundImage: (doctor['doctor_photo']?.isNotEmpty ?? false)
                                   ? NetworkImage(doctor['doctor_photo']!)
                                   : null,
-                          child:
-                              (doctor['doctor_photo`']?.isNotEmpty ?? false)
+                              child: (doctor['doctor_photo']?.isNotEmpty ?? false)
                                   ? null
-                                  : const Icon(Icons.local_hospital,
-                                      size: 30, color: Colors.grey),
-                        ),
+                                  : const Icon(Icons.local_hospital, size: 30, color: Colors.grey),
+                            ),
                             const SizedBox(height: 16),
                             Text(
                               doctor['doctor_name'] ?? 'Unknown Doctor',
@@ -134,9 +148,7 @@ class _DoctorBookingState extends State<DoctorBooking> {
                             ),
                             const SizedBox(height: 5),
                             Text(
-                              doctor['tbl_hospitaldepartment']['tbl_department']
-                                      ['department_name'] ??
-                                  'Not specified',
+                              doctor['tbl_hospitaldepartment']['tbl_department']['department_name'] ?? 'Not specified',
                               style: const TextStyle(
                                 fontSize: 16,
                                 color: Color.fromARGB(255, 129, 143, 150),
@@ -148,8 +160,7 @@ class _DoctorBookingState extends State<DoctorBooking> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        AppointmentBookingPage(doctor: doctor),
+                                    builder: (context) => AppointmentBookingPage(doctor: doctor),
                                   ),
                                 );
                               },
@@ -179,11 +190,3 @@ class _DoctorBookingState extends State<DoctorBooking> {
     );
   }
 }
-
-// Dummy Data for Doctors
-// final List<Map<String, String>> _doctorsList = [
-//   {'name': 'Dr. Aditi Sharma', 'specialization': 'Cardiologist'},
-//   {'name': 'Dr. Rajesh Kumar', 'specialization': 'Dermatologist'},
-//   {'name': 'Dr. Priya Menon', 'specialization': 'Pediatrician'},
-//   {'name': 'Dr. Sameer Verma', 'specialization': 'Orthopedic Surgeon'},
-// ];

@@ -24,10 +24,19 @@ class _MyWidgetState extends State<Hospitallogin> {
     );
 
     final User? user = res.user;
-    if (user?.id != "") {
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => const Homepage()));
-    }
+    final userData =
+          await supabase.from('tbl_hospital').select().eq('hospital_id', user!.id);
+      if (userData.isNotEmpty) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => Homepage()),
+        );
+      } else {
+        // Handle invalid credentials or failed sign-in
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Invalid email or password")),
+        );
+      }
   }
 
   @override

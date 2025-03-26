@@ -156,6 +156,11 @@ class _RegistrationState extends State<Registration> {
           await photoUpload(userId);
         }
 
+        if (pickedProof !="")
+        {
+          await proofUpload(userId);
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Account Created successfully')),
         );
@@ -181,10 +186,32 @@ class _RegistrationState extends State<Registration> {
       await supabase.storage.from(bucketName).uploadBinary(
             filePath,
             pickedImage!.bytes!, // Use file.bytes for Flutter Web
+          
           );
+          
       final publicUrl =
           supabase.storage.from(bucketName).getPublicUrl(filePath);
       await updateImage(uid, publicUrl);
+    } catch (e) {
+      print("Error photo upload: $e");
+    }
+  }
+
+
+  Future<void> proofUpload(String uid) async {
+    try {
+      final bucketName = 'hospital_docs'; // Replace with your bucket name
+      final filePath = "$uid-${pickedProof!.name}";
+      
+      await supabase.storage.from(bucketName).uploadBinary(
+            filePath,
+            pickedProof!.bytes!, // Use file.bytes for Flutter Web
+          
+          );
+          
+      final publicUrl =
+          supabase.storage.from(bucketName).getPublicUrl(filePath);
+      await updateproof(uid, publicUrl);
     } catch (e) {
       print("Error photo upload: $e");
     }
@@ -194,24 +221,25 @@ class _RegistrationState extends State<Registration> {
     try {
       await supabase
           .from('tbl_hospital')
-          .update({'hospital_photo': url, 'hospital_proof': url}).eq(
+          .update({'hospital_photo': url, }).eq(
               'hospital_id', uid);
     } catch (e) {
       print("Error photo updating: $e");
     }
   }
 
-  // Future<String?> _uploadImage(File image, String userId) async {
-  //   try {
-  //     final fileName = 'user_$userId';
-  //     await supabase.storage.from('userdoc').upload(fileName, image);
-  //     final imageUrl = supabase.storage.from('userdoc').getPublicUrl(fileName);
-  //     return imageUrl;
-  //   } catch (e) {
-  //     print('Image upload failed: $e');
-  //     return null;
-  //   }
-  // }
+
+Future<void> updateproof(String uid, String url) async {
+    try {
+      await supabase
+          .from('tbl_hospital')
+          .update({ 'hospital_proof': url}).eq(
+              'hospital_id', uid);
+    } catch (e) {
+      print("Error photo updating: $e");
+    }
+  }
+  
 
   @override
   Widget build(BuildContext context) {

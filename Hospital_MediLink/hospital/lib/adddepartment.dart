@@ -13,6 +13,7 @@ class _AddDepartmentState extends State<AddDepartment> {
   List<Map<String, dynamic>> departmentList = [];
   List<Map<String, dynamic>> hospitalDepartmentList = [];
   String? selectedDepartment;
+  bool isLoading = false; // Added loading state
   final supabase = Supabase.instance.client;
 
   @override
@@ -24,18 +25,29 @@ class _AddDepartmentState extends State<AddDepartment> {
 
   Future<void> fetchDepartments() async {
     try {
+      setState(() => isLoading = true);
       final response = await supabase.from('tbl_department').select();
       setState(() {
-        departmentList = response;
+        departmentList = List<Map<String, dynamic>>.from(response);
+        isLoading = false;
       });
     } catch (e) {
-      print('Exception during fetch: $e');
+      setState(() => isLoading = false);
+      print('Exception during fetch departments: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching departments: $e')),
+      );
     }
   }
 
   Future<void> fetchHospitalDepartments() async {
     try {
-      final hospitalId = supabase.auth.currentUser!.id;
+      setState(() => isLoading = true);
+      final hospitalId = supabase.auth.currentUser?.id;
+      
+      if (hospitalId == null) {
+        throw Exception('No authenticated user found');
+      }
 
       final response = await supabase
           .from('tbl_hospitaldepartment')
@@ -43,61 +55,85 @@ class _AddDepartmentState extends State<AddDepartment> {
           .eq("hospital_id", hospitalId);
 
       setState(() {
-        hospitalDepartmentList = response;
+        hospitalDepartmentList = List<Map<String, dynamic>>.from(response);
+        isLoading = false;
       });
     } catch (e) {
-      print('Exception during fetch: $e');
+      setState(() => isLoading = false);
+      print('Exception during fetch hospital departments: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching hospital departments: $e')),
+      );
     }
   }
 
   Future<void> addHospitalDept() async {
-    try {
-      final hospitalId = supabase.auth.currentUser!.id;
+    if (_formKey.currentState!.validate()) {
+      try {
+        setState(() => isLoading = true);
+        final hospitalId = supabase.auth.currentUser?.id;
 
-      final existingRecords = await supabase
-          .from("tbl_hospitaldepartment")
-          .select("department_id")
-          .eq("department_id", selectedDepartment.toString())
-          .eq("hospital_id", hospitalId);
+        if (hospitalId == null) {
+          throw Exception('No authenticated user found');
+        }
 
-      if (existingRecords.isNotEmpty) {
+        final existingRecords = await supabase
+            .from("tbl_hospitaldepartment")
+            .select("department_id")
+            .eq("department_id", selectedDepartment!)
+            .eq("hospital_id", hospitalId);
+
+        if (existingRecords.isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Department already added!")),
+          );
+          setState(() => isLoading = false);
+          return;
+        }
+
+        await supabase.from("tbl_hospitaldepartment").insert({
+          'department_id': selectedDepartment,
+          'hospital_id': hospitalId,
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Department already added!")),
+          const SnackBar(content: Text("Department added successfully!")),
         );
-        return;
+        
+        setState(() {
+          selectedDepartment = null; // Reset dropdown
+          isLoading = false;
+        });
+        await fetchHospitalDepartments(); // Refresh the list
+      } catch (e) {
+        setState(() => isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to add department: $e")),
+        );
+        print('Error adding department: $e');
       }
-
-      await supabase.from("tbl_hospitaldepartment").insert({
-        'department_id': selectedDepartment,
-        'hospital_id': hospitalId,
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Department added successfully!")),
-      );
-      setState(() {
-        selectedDepartment = null;
-      });
-      fetchHospitalDepartments(); // Refresh list after adding
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to add department")),
-      );
     }
   }
 
   Future<void> deleteDepartment(int did) async {
     try {
+      setState(() => isLoading = true);
       await supabase
           .from('tbl_hospitaldepartment')
           .delete()
           .eq('hospitaldepartment_id', did);
-      fetchHospitalDepartments();
+      
+      await fetchHospitalDepartments(); // Refresh after deletion
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Deleted successfully')),
       );
+      setState(() => isLoading = false);
     } catch (e) {
+      setState(() => isLoading = false);
       print("Error Deleting: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error deleting department: $e')),
+      );
     }
   }
 
@@ -136,108 +172,122 @@ class _AddDepartmentState extends State<AddDepartment> {
                   color: const Color(0xFF0277BD),
                 ),
                 const SizedBox(height: 30),
+                
+                isLoading 
+                    ? const Center(child: CircularProgressIndicator())
+                    : Column(
+                        children: [
+                          DropdownButtonFormField<String>(
+                            decoration: const InputDecoration(
+                              hintText: 'Department',
+                              border: OutlineInputBorder(),
+                              filled: true,
+                              fillColor: Colors.white,
+                            ),
+                            value: selectedDepartment,
+                            hint: const Text("Select the department"),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please select a department';
+                              }
+                              return null;
+                            },
+                            onChanged: (newValue) {
+                              setState(() {
+                                selectedDepartment = newValue;
+                              });
+                            },
+                            items: departmentList.map((department) {
+                              return DropdownMenuItem<String>(
+                                value: department['department_id'].toString(),
+                                child: Text(department['department_name'] ?? 'Unknown'),
+                              );
+                            }).toList(),
+                          ),
+                          const SizedBox(height: 20),
 
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    hintText: 'Department',
-                    border: OutlineInputBorder(),
-                  ),
-                  value: selectedDepartment,
-                  hint: const Text("Select the department"),
-                  onChanged: (newValue) {
-                    setState(() {
-                      selectedDepartment = newValue;
-                    });
-                  },
-                  items: departmentList.map((department) {
-                    return DropdownMenuItem<String>(
-                      value: department['department_id'].toString(),
-                      child: Text(department['department_name']),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 20),
-
-                Center(
-                  child: ElevatedButton(
-                    onPressed: addHospitalDept,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 60, vertical: 15),
-                      backgroundColor: const Color(0xFF0277BD),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      elevation: 6,
-                    ),
-                    child: const Text(
-                      'Submit',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Center(
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text(
-                      "Back to Previous Page",
-                      style: TextStyle(
-                        color: Color(0xFF0277BD),
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // Display the list of added hospital departments
-                hospitalDepartmentList.isEmpty
-                    ? const Center(child: Text("No departments added yet"))
-                    : ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: hospitalDepartmentList.length,
-                        itemBuilder: (context, index) {
-                          final department = hospitalDepartmentList[index];
-
-                          // Retrieve the department icon stored as an integer (codePoint)
-                          String? iconString =
-                              department['tbl_department']['department_icon'];
-                          int? iconCode =
-                              int.tryParse(iconString ?? "0"); // Convert to int
-                          
-                          return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: ListTile(
-                              leading: iconCode != null && iconCode > 0
-                                  ? Icon(
-                                      IconData(iconCode,
-                                          fontFamily: 'MaterialIcons'),
-                                      size: 30,
-                                      color: Colors.blue,
-                                    )
-                                  : const Icon(Icons.help_outline,
-                                      size: 30, color: Colors.blue),
-                              title: Text(department['tbl_department']
-                                      ['department_name'] ??
-                                  "Unknown"),
-                              trailing: IconButton(
-                                onPressed: () {
-                                  deleteDepartment(
-                                      department['hospitaldepartment_id']);
-                                },
-                                icon: const Icon(Icons.delete, color: Colors.red),
+                          Center(
+                            child: ElevatedButton(
+                              onPressed: isLoading ? null : addHospitalDept,
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 60, vertical: 15),
+                                backgroundColor: const Color(0xFF0277BD),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                elevation: 6,
+                              ),
+                              child: isLoading
+                                  ? const CircularProgressIndicator(color: Colors.white)
+                                  : const Text(
+                                      'Submit',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Center(
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: const Text(
+                                "Back to Previous Page",
+                                style: TextStyle(
+                                  color: Color(0xFF0277BD),
+                                  fontSize: 16,
+                                ),
                               ),
                             ),
-                          );
-                        },
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Display the list of added hospital departments
+                          hospitalDepartmentList.isEmpty
+                              ? const Center(child: Text("No departments added yet"))
+                              : ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: hospitalDepartmentList.length,
+                                  itemBuilder: (context, index) {
+                                    final department = hospitalDepartmentList[index];
+
+                                    String? iconString = department['tbl_department']
+                                        ['department_icon'];
+                                    int? iconCode = int.tryParse(iconString ?? "0");
+
+                                    return Card(
+                                      margin: const EdgeInsets.symmetric(vertical: 8.0),
+                                      child: ListTile(
+                                        leading: iconCode != null && iconCode > 0
+                                            ? Icon(
+                                                IconData(iconCode,
+                                                    fontFamily: 'MaterialIcons'),
+                                                size: 30,
+                                                color: Colors.blue,
+                                              )
+                                            : const Icon(Icons.help_outline,
+                                                size: 30, color: Colors.blue),
+                                        title: Text(department['tbl_department']
+                                                ['department_name'] ??
+                                            "Unknown"),
+                                        trailing: IconButton(
+                                          onPressed: isLoading
+                                              ? null
+                                              : () => deleteDepartment(
+                                                  department['hospitaldepartment_id']),
+                                          icon: const Icon(Icons.delete, color: Colors.red),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                        ],
                       ),
               ],
             ),

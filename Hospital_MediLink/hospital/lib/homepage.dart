@@ -17,7 +17,7 @@ class Homepage extends StatefulWidget {
 }
 
 class _HomepageState extends State<Homepage> {
-final ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollController();
   bool _isHeaderVisible = true;
 
   @override
@@ -48,9 +48,6 @@ final ScrollController _scrollController = ScrollController();
     super.dispose();
   }
 
-
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,21 +65,24 @@ final ScrollController _scrollController = ScrollController();
                   children: [
                     // Stats Section
                     Row(
-  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  children: [
-    Expanded(
-      child: _buildStatsCard("Doctors", "120", Icons.person_add),
-    ),
-    SizedBox(width: 10), // Space between cards
-    Expanded(
-      child: _buildStatsCard("Appointments", "450", Icons.calendar_today),
-    ),
-    SizedBox(width: 10), // Space between cards
-    Expanded(
-      child: _buildStatsCard("Departments", "15", Icons.apartment),
-    ),
-  ],
-),
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: _buildStatsCard(
+                              "Doctors", "120", Icons.person_add),
+                        ),
+                        SizedBox(width: 10), // Space between cards
+                        Expanded(
+                          child: _buildStatsCard(
+                              "Appointments", "450", Icons.calendar_today),
+                        ),
+                        SizedBox(width: 10), // Space between cards
+                        Expanded(
+                          child: _buildStatsCard(
+                              "Departments", "15", Icons.apartment),
+                        ),
+                      ],
+                    ),
 
                     SizedBox(height: 40),
 
@@ -137,40 +137,42 @@ final ScrollController _scrollController = ScrollController();
                             );
                           },
                         ),
-                        _buildGridCard(context, "Manage Account", Icons.group, () {
+                        _buildGridCard(context, "Manage Account", Icons.group,
+                            () {
                           // Navigate to Manage Staff screen
                           Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => HospitalProfile()),
-                            );
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => HospitalProfile()),
+                          );
                         }),
                         _buildGridCard(
-                            context, "Attendence Reports", Icons.insert_chart, () {
+                            context, "Attendence Reports", Icons.insert_chart,
+                            () {
                           // Navigate to View Reports screen
                           Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => StaffAttendancePage()),
-                            );
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => StaffAttendancePage()),
+                          );
                         }),
-                        _buildGridCard(
-                            context, "Appointments", Icons.event, () {
+                        _buildGridCard(context, "Appointments", Icons.event,
+                            () {
                           // Navigate to Appointments screen
                           Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => CounterStaffDashboard()),
-                            );
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => CounterStaffDashboard()),
+                          );
                         }),
-                        _buildGridCard(context, "Find Person",
-                            Icons.person_search, () {
+                        _buildGridCard(
+                            context, "Find Person", Icons.person_search, () {
                           // Navigate to Hospital Settings screen
-                           Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => SearchOptionScreen()),
-                            );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => SearchOptionScreen()),
+                          );
                         }),
                       ],
                     ),
@@ -344,80 +346,81 @@ final ScrollController _scrollController = ScrollController();
   }
 }
 
-  // Function to build Stats Cards (doctor, appointments, etc.)
-  Widget _buildStatsCard(String title, String value, IconData icon) {
-    return Container(
-      width: 240,
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 10,
-            offset: Offset(0, 5),
+// Function to build Stats Cards (doctor, appointments, etc.)
+Widget _buildStatsCard(String title, String value, IconData icon) {
+  return Container(
+    width: 240,
+    padding: EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(15),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.2),
+          blurRadius: 10,
+          offset: Offset(0, 5),
+        ),
+      ],
+    ),
+    child: Column(
+      children: [
+        Icon(icon, color: Color(0xFF0277BD), size: 40),
+        SizedBox(height: 10),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 18,
+            color: Colors.black54,
+            fontWeight: FontWeight.bold,
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: Color(0xFF0277BD), size: 40),
-          SizedBox(height: 10),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.black54,
-              fontWeight: FontWeight.bold,
-            ),
+        ),
+        SizedBox(height: 5),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF0277BD),
           ),
-          SizedBox(height: 5),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF0277BD),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 
-  // Function to build each option as a grid item
-  Widget _buildGridCard(BuildContext context, String label, IconData icon, VoidCallback onPressed) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Card(
-        shape: RoundedRectangleBorder(
+// Function to build each option as a grid item
+Widget _buildGridCard(
+    BuildContext context, String label, IconData icon, VoidCallback onPressed) {
+  return GestureDetector(
+    onTap: onPressed,
+    child: Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      elevation: 10,
+      child: Container(
+        padding: EdgeInsets.all(20),
+        decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15),
+          color: Colors.white,
         ),
-        elevation: 10,
-        child: Container(
-          padding: EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            color: Colors.white,
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: Color(0xFF0277BD), size: 40),
-              SizedBox(height: 10),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.black,
-                  fontWeight: FontWeight.w500,
-                ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Color(0xFF0277BD), size: 40),
+            SizedBox(height: 10),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.black,
+                fontWeight: FontWeight.w500,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}

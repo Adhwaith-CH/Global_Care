@@ -56,22 +56,25 @@ class HomePageContent extends StatefulWidget {
   _HomePageContentState createState() => _HomePageContentState();
 }
 
-
-
 class _HomePageContentState extends State<HomePageContent> {
   bool isToggled = false;
   String Name = "";
+  String hosname = "";
+  String hoscontact = "";
+  String hosaddress = "";
+  String hosphoto = "";
+
   String doctorphoto = "";
 
   set selectedNumber(int selectedNumber) {}
 
-
-@override
+  @override
   void initState() {
     // TODO: implement initState
     super.initState();
     fetchProfileData();
   }
+
   Future<void> fetchProfileData() async {
     try {
       final doctor_id = supabase.auth.currentUser!.id;
@@ -83,11 +86,27 @@ class _HomePageContentState extends State<HomePageContent> {
 
       final response = await supabase
           .from('tbl_doctor') // Your Supabase table name
-          .select('*,tbl_place("*",tbl_district(*))') // Columns to fetch
-          .eq('doctor_id', doctor_id) // Fetch only the logged-in user’s data
-          .single(); // Get only one record
+          .select(
+              '*, tbl_place(*, tbl_district(*)), tbl_hospitaldepartment(*, tbl_hospital(*))')
+          .eq('doctor_id', doctor_id) // Fetch only the logged-in doctor’s data
+          .single();
+      // Get only one record
+      print(response);
       setState(() {
         Name = response['doctor_name'] ?? 'No Name';
+        hosname = response['tbl_hospitaldepartment']['tbl_hospital']
+                ['hospital_name'] ??
+            'N/A';
+        hoscontact = response['tbl_hospitaldepartment']['tbl_hospital']
+                    ['hospital_contact']
+                .toString() ??
+            'N/A';
+        hosaddress = response['tbl_hospitaldepartment']['tbl_hospital']
+                ['hospital_address'] ??
+            'N/A';
+        hosphoto = response['tbl_hospitaldepartment']['tbl_hospital']
+                ['hospital_photo'] ??
+            'N/A';
         doctorphoto = response['doctor_photo'] ?? 'No Name';
       });
     } catch (error) {
@@ -209,47 +228,70 @@ class _HomePageContentState extends State<HomePageContent> {
 
   Widget _buildHighlightSection() {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.dashboard,
-              size: 60, color: Color.fromARGB(255, 25, 83, 112)),
-          const SizedBox(width: 20),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text(
-                'Dashboard Overview',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 25, 83, 112),
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Column(
+              children: [
+                Image.asset(
+                  'assets/Untitled_Project__4_-removebg-preview.png',
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.contain,
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  'MEDILINK',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1A3C5A),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Your Health Hub',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1A3C5A),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'MediLink keeps your patients history at your fingertips',
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.grey.shade800,
+                      height: 1.5,
+                      fontWeight: FontWeight.w400,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
-              SizedBox(height: 8),
-              Text(
-                'Monitor patients and \n appointments  in one place.',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+            ),
+          ],
+        ));
   }
 
   Widget _buildQuickLinks() {
@@ -329,8 +371,8 @@ class _HomePageContentState extends State<HomePageContent> {
     return Column(
       children: [
         _buildInsightCard(
-          title: 'Today’s Overview',
-          description: 'Check your daily patient count \n and appointments.',
+          title: hosname,
+          description: hosaddress,
         ),
         const SizedBox(height: 16),
       ],
@@ -338,28 +380,33 @@ class _HomePageContentState extends State<HomePageContent> {
   }
 
   Widget _buildInsightCard({
-    required String title,
-    required String description,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.bar_chart,
-              size: 50, color: Color.fromARGB(255, 25, 83, 112)),
-          const SizedBox(width: 20),
-          Column(
+  required String title,
+  required String description,
+}) {
+  return Container(
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.1),
+          blurRadius: 10,
+          offset: Offset(0, 4),
+        ),
+      ],
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CircleAvatar(
+          radius: 40,
+          backgroundImage: NetworkImage(hosphoto), // Ensure the image loads properly
+        ),
+        const SizedBox(width: 20),
+        // Ensure the column containing text can expand within available space
+        Expanded(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -373,73 +420,16 @@ class _HomePageContentState extends State<HomePageContent> {
               const SizedBox(height: 8),
               Text(
                 description,
-                style: const TextStyle(fontSize: 16, color: Colors.grey),
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+                maxLines: 5, // Limits the number of lines to prevent overflow
+                overflow: TextOverflow.ellipsis, // Adds "..." if text overflows
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSettingsCards() {
-    return Column(
-      children: [
-        _buildSettingsCard(
-          title: 'Connection Settings',
-          description: 'Connect your profile with a hospital.',
-        ),
-        const SizedBox(height: 16),
-        _buildSettingsCard(
-          title: 'Support',
-          description: 'Contact support for help and guidance.',
         ),
       ],
-    );
-  }
+    ),
+  );
+}
 
-  Widget _buildSettingsCard({
-    required String title,
-    required String description,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.settings,
-              size: 40, color: Color.fromARGB(255, 25, 83, 112)),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 25, 83, 112),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                description,
-                style: const TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 }

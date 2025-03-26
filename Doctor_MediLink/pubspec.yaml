@@ -18,6 +18,8 @@ dependencies:
   photo_view: ^0.15.0
   pdf_render: ^1.4.12
   flutter_pdfview: ^1.4.0
+  intl: ^0.20.2
+  google_fonts: ^6.2.1
 
 
 

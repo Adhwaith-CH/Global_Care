@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:hospital/formvalidation.dart';
 
 class Adddoctor extends StatefulWidget {
   const Adddoctor({super.key});
@@ -35,8 +36,10 @@ class _AdddoctorState extends State<Adddoctor> {
   PlatformFile? pickedImage;
   PlatformFile? pickedProof;
 
-  final String _hintText = "Proof"; // Default hint text
+  final String _hintText = "Proof";
   bool _showGenderOptions = false;
+
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -72,7 +75,7 @@ class _AdddoctorState extends State<Adddoctor> {
 
   Future<void> handleImageUpload() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
-      allowMultiple: false, // Only single file upload
+      allowMultiple: false,
     );
     if (result != null) {
       setState(() {
@@ -85,7 +88,6 @@ class _AdddoctorState extends State<Adddoctor> {
 
   Future<void> pickFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
-
     if (result != null) {
       setState(() {
         selectedFileBytes = result.files.first.bytes;
@@ -96,11 +98,11 @@ class _AdddoctorState extends State<Adddoctor> {
     }
   }
 
-
-
-   Future<void> fetchDepartment() async {
+  Future<void> fetchDepartment() async {
     try {
-      final response = await supabase.from('tbl_hospitaldepartment').select("*, tbl_department(*)");
+      final response = await supabase
+          .from('tbl_hospitaldepartment')
+          .select("*, tbl_department(*)");
       setState(() {
         hospitaldepartmentlist = List<Map<String, dynamic>>.from(response);
       });
@@ -110,81 +112,92 @@ class _AdddoctorState extends State<Adddoctor> {
   }
 
   Future<void> _signUp() async {
-    try {
-      final AuthResponse response = await supabase.auth.signUp(
-        email: email.text,
-        password: password.text,
-      );
+    if (_formKey.currentState!.validate()) {
+      if (pickedImage != null && selectedFileBytes != null) {
+        try {
+          final AuthResponse response = await supabase.auth.signUp(
+            email: email.text,
+            password: password.text,
+          );
 
-      // if (response.user != null) {
-      //   String fullName = fullname.text;
-      //   String firstName = fullName.split(' ').first;
-      //   await supabase.auth.updateUser(UserAttributes(
-      //     data: {'display_name': firstName},
-      //   ));
-      // }
+          final User? user = response.user;
 
-      final User? user = response.user;
+          if (user == null) {
+            print('Sign up error: $user');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Sign up failed: User not created')),
+            );
+          } else {
+            final String userId = user.id;
 
-      if (user == null) {
-        print('Sign up error: $user');
+            String? photoUrl = await _uploadImage(userId);
+            String? proofUrl = await _uploadproof(userId);
+            String? gid = await getGID();
+
+            await supabase.from('tbl_doctor').insert({
+              'doctor_id': userId,
+              'doctor_name': fullname.text,
+              'doctor_email': email.text,
+              'doctor_photo': photoUrl,
+              'doctor_proof': proofUrl,
+              'doctor_password': password.text,
+              'place_id': selectedPlace,
+              'doctor_address': address.text,
+              'doctor_gender': selectedGender,
+              'doctor_dob': dob.text,
+              'doctor_contact': contact.text,
+              'hospitaldepartment_id': selectedDoctorDepartment,
+              'doctor_gid': gid
+            });
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Account Created successfully')),
+            );
+          }
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Sign up failed: $e')),
+          );
+          print('Sign up failed: $e');
+        }
       } else {
-        final String userId = user.id;
-
-        String? photoUrl;
-        if (pickedImage != null) {
-          photoUrl = await _uploadImage(userId,);
-        }
-
-        String? proofUrl;
-        if (selectedFileBytes != null) {
-          proofUrl = await _uploadproof(userId);
-        }
-
-        print("URL: $proofUrl");
-        print("URL: $photoUrl");
-
-        await supabase.from('tbl_doctor').insert({
-          'doctor_id': userId,
-          'doctor_name': fullname.text,
-          'doctor_email': email.text,
-          'doctor_photo': photoUrl,
-          'doctor_proof': proofUrl,
-          'doctor_password': password.text,
-          'place_id': selectedPlace,
-          'doctor_address': address.text,
-          'doctor_gender': selectedGender,
-          'doctor_dob': dob.text,
-          'doctor_contact': contact.text,
-          'hospitaldepartment_id':selectedDoctorDepartment,
-        });
-        
-
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Account Created successfully')),
+          SnackBar(content: Text('Please upload both image and proof')),
         );
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(
-        //     builder: (context) => Loginpage(),
-        //   ),
-        // );
       }
-    } catch (e) {
-      print('Sign up failed: $e');
     }
+  }
+
+  Future<String?> getGID() async {
+    final lastUser = await supabase
+        .from('tbl_doctor')
+        .select('doctor_gid')
+        .order('doctor_gid', ascending: false)
+        .limit(1)
+        .maybeSingle();
+
+    String newGID = "GDOC1001";
+    if (lastUser != null && lastUser['doctor_gid'] != null) {
+      String? lastId = lastUser['doctor_gid'] as String?;
+      if (lastId != null) {
+        int gidNumber = int.parse(lastId.replaceAll(RegExp(r'[^0-9]'), ''));
+        int newNumber = gidNumber + 1;
+        newGID = "GDOC$newNumber";
+      }
+    }
+    print("newGID: $newGID");
+    return newGID;
   }
 
   Future<String?> _uploadImage(String userId) async {
     try {
-      final bucketName = 'doctordoc'; // Replace with your bucket name
+      final bucketName = 'doctordoc';
       final filePath = "$userId-${pickedImage!.name}";
       await supabase.storage.from(bucketName).uploadBinary(
             filePath,
-            pickedImage!.bytes!, // Use file.bytes for Flutter Web
+            pickedImage!.bytes!,
           );
-      final publicUrl =
-          supabase.storage.from(bucketName).getPublicUrl(filePath);
+      final publicUrl = supabase.storage.from(bucketName).getPublicUrl(filePath);
       return publicUrl;
     } catch (e) {
       print('Image upload failed: $e');
@@ -200,16 +213,13 @@ class _AdddoctorState extends State<Adddoctor> {
             selectedFileBytes!,
             fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
           );
-      final imageUrl =
-          supabase.storage.from('doctordoc').getPublicUrl(fileName);
+      final imageUrl = supabase.storage.from('doctordoc').getPublicUrl(fileName);
       return imageUrl;
     } catch (e) {
       print('Image upload failed: $e');
       return null;
     }
   }
-
-  final _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
@@ -225,314 +235,267 @@ class _AdddoctorState extends State<Adddoctor> {
         elevation: 6,
       ),
       body: Container(
-          color: Colors.white,
-          padding: EdgeInsets.all(20.0),
-          child: SingleChildScrollView(
-              child: Card(
-                  elevation: 8,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Form(
-                        key: _formKey,
-                        child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+        color: Colors.white,
+        padding: EdgeInsets.all(20.0),
+        child: SingleChildScrollView(
+          child: Card(
+            elevation: 8,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Form(
+                key: _formKey,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Enter Doctor's Details",
+                            style: TextStyle(
+                              color: Color(0xFF0277BD),
+                              fontSize: 26,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 20),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              // Left Section: Form Inputs
-                              Expanded(
-                                child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // Title Section
-                                      Text(
-                                        "Enter Doctor's Details",
-                                        style: TextStyle(
-                                          color: Color(0xFF0277BD),
-                                          fontSize: 26,
-                                          fontWeight: FontWeight.bold,
+                              Row(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 1300),
+                                    child: GestureDetector(
+                                      onTap: handleImageUpload,
+                                      child: AnimatedContainer(
+                                        duration: Duration(milliseconds: 300),
+                                        curve: Curves.easeInOut,
+                                        width: 120,
+                                        height: 120,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: const Color.fromARGB(
+                                              255, 255, 255, 255),
+                                          image: pickedImage != null
+                                              ? DecorationImage(
+                                                  image: MemoryImage(
+                                                      Uint8List.fromList(
+                                                          pickedImage!.bytes!)),
+                                                  fit: BoxFit.cover,
+                                                )
+                                              : null,
                                         ),
-                                      ),
-                                      SizedBox(height: 20),
-
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Padding(
-                                                padding: const EdgeInsets.only(left: 1300),
-                                                child: GestureDetector(
-                                                  onTap: handleImageUpload,
-                                                  child: AnimatedContainer(
-                                                    duration: Duration(
-                                                        milliseconds: 300),
-                                                    curve: Curves.easeInOut,
-                                                    width: 120,
-                                                    height: 120,
-                                                    decoration: BoxDecoration(
-                                                      shape: BoxShape.circle,
-                                                      color: Colors.blue.shade50,
-                                                      image: pickedImage != null
-                                                          ? DecorationImage(
-                                                              image: MemoryImage(
-                                                              Uint8List.fromList(
-                                                                  pickedImage!
-                                                                      .bytes!),
-                                                            ))
-                                                          : null,
-                                                    ),
-                                                    child: pickedImage == null
-                                                        ? Icon(Icons.camera_alt,
-                                                            color: Color.fromARGB(
-                                                                255, 37, 99, 160),
-                                                            size: 50)
-                                                        : null,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          SizedBox(height: 10),
-                                          _buildInputField(fullname,
-                                              'Full Name', Icons.person),
-                                          _buildInputField(address, 'Address',
-                                              Icons.location_on),
-                                          _buildInputField(
-                                              contact, 'Contact', Icons.phone),
-                                          SizedBox(height: 14),
-                                          _buildGenderSelection(),
-                                          SizedBox(height: 14),
-                                          _buildInputField(
-                                              email, 'Email', Icons.email,
-                                              keyboardType:
-                                                  TextInputType.emailAddress),
-                                          _buildInputField(
-                                              password, 'Password', Icons.lock,
-                                              obscureText: true),
-                                          _buildInputField(dob, 'Date of Birth',
-                                              Icons.calendar_today,
-                                              onTap: _pickDate),
-                                          SizedBox(height: 14),
-
-                                           DropdownButtonFormField<String>(
-                                            decoration: const InputDecoration(
-                                              hintText: 'Department',
-                                              prefixIcon: Icon(
-                                                Icons.apartment,
-                                              ),
-                                              filled: true,
-                                              fillColor: Color(0xFFF5F5F5),
-                                              border: OutlineInputBorder(
-                                                borderSide: BorderSide.none,
-                                                borderRadius:
-                                                    BorderRadius.vertical(
-                                                        bottom:
-                                                            Radius.elliptical(
-                                                                20, 20)),
-                                              ),
-                                            ),
-                                            value:
-                                                selectedDoctorDepartment, //initilizee cheyunuu
-                                            validator: (value) {
-                                              if (value == "" ||
-                                                  value!.isEmpty) {
-                                                return "Enter the DoctorDepartment name";
-                                              }
-                                              return null;
-                                            },
-                                            hint: Text("Select the Department"),
-                                            onChanged: (newValue) {
-                                              //button click cheyubool text box ill select cheythaa valuee"newValue"leeku store cheyunuu
-                                              setState(() {
-                                                selectedDoctorDepartment =
-                                                    newValue; //"newValue" ill ulla value "selectedDistrict"leeku store cheyunuu
-                                                
-                                              });
-                                            },
-                                            items: hospitaldepartmentlist.map((department) {
-                                              return DropdownMenuItem<String>(
-                                                value: department['hospitaldepartment_id']
-                                                    .toString(),
-                                                child: Text(
-                                                    department["tbl_department"]['department_name']),
-                                              );
-                                            }).toList(),
-                                          ),
-
-                                          SizedBox(height: 14),
-
-                                          DropdownButtonFormField<String>(
-                                            decoration: const InputDecoration(
-                                              hintText: 'District',
-                                              prefixIcon: Icon(
-                                                Icons.location_city,
-                                              ),
-                                              filled: true,
-                                              fillColor: Color(0xFFF5F5F5),
-                                              border: OutlineInputBorder(
-                                                borderSide: BorderSide.none,
-                                                borderRadius:
-                                                    BorderRadius.vertical(
-                                                        bottom:
-                                                            Radius.elliptical(
-                                                                20, 20)),
-                                              ),
-                                            ),
-                                            value:
-                                                selectedDistrict, //initilizee cheyunuu
-                                            validator: (value) {
-                                              if (value == "" ||
-                                                  value!.isEmpty) {
-                                                return "Enter the district name";
-                                              }
-                                              return null;
-                                            },
-                                            hint: Text("Select the District"),
-                                            onChanged: (newValue) {
-                                              //button click cheyubool text box ill select cheythaa valuee"newValue"leeku store cheyunuu
-                                              setState(() {
-                                                selectedDistrict =
-                                                    newValue; //"newValue" ill ulla value "selectedDistrict"leeku store cheyunuu
-                                                fetchPlace(selectedDistrict!);
-                                              });
-                                            },
-                                            items: districtlist.map((district) {
-                                              return DropdownMenuItem<String>(
-                                                value: district['district_id']
-                                                    .toString(),
-                                                child: Text(
-                                                    district['district_name']),
-                                              );
-                                            }).toList(),
-                                          ),
-                                          SizedBox(
-                                            height: 20,
-                                          ),
-                                          DropdownButtonFormField<String>(
-                                            decoration: const InputDecoration(
-                                              hintText: 'Place',
-                                              prefixIcon: Icon(
-                                                Icons.location_pin,
-                                              ),
-                                              filled: true,
-                                              fillColor: Color(0xFFF5F5F5),
-                                              border: OutlineInputBorder(
-                                                borderSide: BorderSide.none,
-                                                borderRadius:
-                                                    BorderRadius.vertical(
-                                                        bottom:
-                                                            Radius.elliptical(
-                                                                20, 20)),
-                                              ),
-                                            ),
-                                            value:
-                                                selectedPlace, //initilizee cheyunuu
-                                            validator: (value) {
-                                              if (value == "" ||
-                                                  value!.isEmpty) {
-                                                return "Enter the Place name";
-                                              }
-                                              return null;
-                                            },
-                                            hint: Text("Select the Place"),
-                                            onChanged: (newValue) {
-                                              //button click cheyubool text box ill select cheythaa valuee"newValue"leeku store cheyunuu
-                                              setState(() {
-                                                selectedPlace =
-                                                    newValue; //"newValue" ill ulla value "selectedDistrict"leeku store cheyunuu
-                                              });
-                                            },
-                                            items: placelist.map((place) {
-                                              return DropdownMenuItem<String>(
-                                                value: place['place_id']
-                                                    .toString(),
-                                                child:
-                                                    Text(place['place_name']),
-                                              );
-                                            }).toList(),
-                                          ),
-                                          SizedBox(
-                                            height: 20,
-                                          ),
-                                          TextFormField(
-                                            controller: fileController,
-                                            onTap: () {
-                                              pickFile();
-                                            },
-                                            readOnly:
-                                                true, // Prevent manual text input
-                                            decoration: InputDecoration(
-                                              prefixIcon: Icon(
-                                                Icons.verified,
-                                              ), // Dynamic icon color
-                                              hintText:
-                                                  _hintText, // Dynamic hintText
-                                              filled: true,
-                                              fillColor: Color(0xFFF5F5F5),
-                                              border: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.vertical(
-                                                        bottom:
-                                                            Radius.elliptical(
-                                                                20, 20)),
-                                                borderSide: BorderSide.none,
-                                              ),
-                                              contentPadding:
-                                                  EdgeInsets.symmetric(
-                                                      horizontal: 20,
-                                                      vertical: 15),
-                                            ),
-                                          ),
-                                          SizedBox(height: 40),
-                                          Center(
-                                            child: ElevatedButton(
-                                              onPressed: _signUp,
-                                              style: ElevatedButton.styleFrom(
-                                                padding: EdgeInsets.symmetric(
-                                                    horizontal: 40,
-                                                    vertical: 15),
-                                                backgroundColor: Color.fromARGB(
+                                        child: pickedImage == null
+                                            ? Icon(Icons.camera_alt,
+                                                color: Color.fromARGB(
                                                     255, 37, 99, 160),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(30),
-                                                ),
-                                                elevation: 12,
-                                                shadowColor: Color.fromARGB(
-                                                    255, 37, 99, 160),
-                                              ),
-                                              child: Text(
-                                                'Register',
-                                                style: TextStyle(
-                                                    fontSize: 18,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.white),
-                                              ),
-                                            ),
-                                          ),
-                                          // Right Section: Image Upload
-                                          SizedBox(width: 20),
-                                        ],
+                                                size: 50)
+                                            : null,
                                       ),
-                                    ]),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ]),
-                      ))))),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Color(0xFF0277BD),
-        child: Icon(Icons.add, color: Colors.white),
-        onPressed: () {
-          // Action for the FAB
-        },
+                              SizedBox(height: 10),
+                              _buildInputField(
+                                fullname,
+                                'Full Name',
+                                Icons.person,
+                                validator: FormValidation.validateName,
+                              ),
+                              _buildInputField(
+                                address,
+                                'Address',
+                                Icons.location_on,
+                                validator: FormValidation.validateAddress,
+                              ),
+                              _buildInputField(
+                                contact,
+                                'Contact',
+                                Icons.phone,
+                                validator: FormValidation.validateContact,
+                              ),
+                              SizedBox(height: 14),
+                              _buildGenderSelection(),
+                              SizedBox(height: 14),
+                              _buildInputField(
+                                email,
+                                'Email',
+                                Icons.email,
+                                keyboardType: TextInputType.emailAddress,
+                                validator: FormValidation.validateEmail,
+                              ),
+                              _buildInputField(
+                                password,
+                                'Password',
+                                Icons.lock,
+                                obscureText: true,
+                                validator: FormValidation.validatePassword,
+                              ),
+                              _buildInputField(
+                                dob,
+                                'Date of Birth',
+                                Icons.calendar_today,
+                                onTap: _pickDate,
+                                validator: FormValidation.validateDropdown,
+                              ),
+                              SizedBox(height: 14),
+                              DropdownButtonFormField<String>(
+                                decoration: const InputDecoration(
+                                  hintText: 'Department',
+                                  prefixIcon: Icon(Icons.apartment),
+                                  filled: true,
+                                  fillColor: Color(0xFFF5F5F5),
+                                  border: OutlineInputBorder(
+                                    borderSide: BorderSide.none,
+                                    borderRadius: BorderRadius.vertical(
+                                        bottom: Radius.elliptical(20, 20)),
+                                  ),
+                                ),
+                                value: selectedDoctorDepartment,
+                                validator: FormValidation.validateDropdown,
+                                hint: Text("Select the Department"),
+                                onChanged: (newValue) {
+                                  setState(() {
+                                    selectedDoctorDepartment = newValue;
+                                  });
+                                },
+                                items: hospitaldepartmentlist
+                                    .map((department) {
+                                      return DropdownMenuItem<String>(
+                                        value: department[
+                                                'hospitaldepartment_id']
+                                            .toString(),
+                                        child: Text(department["tbl_department"]
+                                            ['department_name']),
+                                      );
+                                    })
+                                    .toList(),
+                              ),
+                              SizedBox(height: 14),
+                              DropdownButtonFormField<String>(
+                                decoration: const InputDecoration(
+                                  hintText: 'District',
+                                  prefixIcon: Icon(Icons.location_city),
+                                  filled: true,
+                                  fillColor: Color(0xFFF5F5F5),
+                                  border: OutlineInputBorder(
+                                    borderSide: BorderSide.none,
+                                    borderRadius: BorderRadius.vertical(
+                                        bottom: Radius.elliptical(20, 20)),
+                                  ),
+                                ),
+                                value: selectedDistrict,
+                                validator: FormValidation.validateDropdown,
+                                hint: Text("Select the District"),
+                                onChanged: (newValue) {
+                                  setState(() {
+                                    selectedDistrict = newValue;
+                                    fetchPlace(selectedDistrict!);
+                                  });
+                                },
+                                items: districtlist.map((district) {
+                                  return DropdownMenuItem<String>(
+                                    value: district['district_id'].toString(),
+                                    child: Text(district['district_name']),
+                                  );
+                                }).toList(),
+                              ),
+                              SizedBox(height: 20),
+                              DropdownButtonFormField<String>(
+                                decoration: const InputDecoration(
+                                  hintText: 'Place',
+                                  prefixIcon: Icon(Icons.location_pin),
+                                  filled: true,
+                                  fillColor: Color(0xFFF5F5F5),
+                                  border: OutlineInputBorder(
+                                    borderSide: BorderSide.none,
+                                    borderRadius: BorderRadius.vertical(
+                                        bottom: Radius.elliptical(20, 20)),
+                                  ),
+                                ),
+                                value: selectedPlace,
+                                validator: FormValidation.validateDropdown,
+                                hint: Text("Select the Place"),
+                                onChanged: (newValue) {
+                                  setState(() {
+                                    selectedPlace = newValue;
+                                  });
+                                },
+                                items: placelist.map((place) {
+                                  return DropdownMenuItem<String>(
+                                    value: place['place_id'].toString(),
+                                    child: Text(place['place_name']),
+                                  );
+                                }).toList(),
+                              ),
+                              SizedBox(height: 20),
+                              TextFormField(
+                                controller: fileController,
+                                onTap: () {
+                                  pickFile();
+                                },
+                                readOnly: true,
+                                validator: FormValidation.validateDropdown,
+                                decoration: InputDecoration(
+                                  prefixIcon: Icon(Icons.verified),
+                                  hintText: _hintText,
+                                  filled: true,
+                                  fillColor: Color(0xFFF5F5F5),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.vertical(
+                                        bottom: Radius.elliptical(20, 20)),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 15),
+                                ),
+                              ),
+                              SizedBox(height: 40),
+                              Center(
+                                child: ElevatedButton(
+                                  onPressed: _signUp,
+                                  style: ElevatedButton.styleFrom(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 40, vertical: 15),
+                                    backgroundColor:
+                                        Color.fromARGB(255, 37, 99, 160),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(30),
+                                    ),
+                                    elevation: 12,
+                                    shadowColor:
+                                        Color.fromARGB(255, 37, 99, 160),
+                                  ),
+                                  child: Text(
+                                    'Register',
+                                    style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  // Custom Input Field Widget with Floating Labels
   Widget _buildInputField(
     TextEditingController controller,
     String label,
@@ -540,27 +503,26 @@ class _AdddoctorState extends State<Adddoctor> {
     bool obscureText = false,
     TextInputType? keyboardType,
     Function()? onTap,
+    String? Function(String?)? validator,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: TextFormField(
-        
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
+        validator: validator,
         decoration: InputDecoration(
           border: OutlineInputBorder(borderSide: BorderSide.none),
           filled: true,
           fillColor: Color.fromARGB(255, 241, 246, 246),
           labelText: label,
           labelStyle: TextStyle(
-            // color: Color.fromARGB(255, 37, 99, 160),
             fontSize: 15,
             fontWeight: FontWeight.w500,
           ),
           prefixIcon: Icon(icon),
         ),
-        
         onTap: onTap,
       ),
     );
@@ -572,8 +534,6 @@ class _AdddoctorState extends State<Adddoctor> {
       curve: Curves.easeInOut,
       decoration: BoxDecoration(
         color: Color.fromARGB(255, 241, 246, 246),
-
-        //border: Border.all(width: 0),
       ),
       padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       child: Column(
@@ -587,9 +547,7 @@ class _AdddoctorState extends State<Adddoctor> {
             },
             child: Row(
               children: [
-                Icon(
-                  Icons.person,
-                ),
+                Icon(Icons.person),
                 SizedBox(width: 10),
                 Text(
                   "Gender",

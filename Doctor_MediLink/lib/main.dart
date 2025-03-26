@@ -3,7 +3,6 @@ import 'package:loginpage/DoctorHomescreen.dart';
 import 'package:loginpage/finduser.dart';
 import 'package:loginpage/loginpage.dart';
 import 'package:loginpage/profile.dart';
-import 'package:loginpage/registration.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> main() async {
@@ -23,7 +22,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: Register()
+      home: Loginpage()
     );
   }
 }

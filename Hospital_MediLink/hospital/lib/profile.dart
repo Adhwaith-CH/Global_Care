@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart'; // For animations
+import 'package:hospital/changepassword.dart';
+import 'package:hospital/editprofile.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HospitalProfile extends StatefulWidget {
@@ -28,7 +30,7 @@ class _HospitalProfileState extends State<HospitalProfile> {
 
       final response = await supabase
           .from('tbl_hospital')
-          .select()
+          .select('*, tbl_place(*, tbl_district(*))')
           .eq('hospital_id', user.id)
           .single();
 
@@ -39,18 +41,24 @@ class _HospitalProfileState extends State<HospitalProfile> {
 
       setState(() {
         hospitalData = response;
+        print(hospitalData);
 
         // Handling Null and Type Issues
-        hospitalData!['hospital_name'] = hospitalData!['hospital_name'] ?? 'N/A';
-        hospitalData!['hospital_email'] = hospitalData!['hospital_email'] ?? 'N/A';
-        hospitalData!['hospital_contact'] = hospitalData!['hospital_contact'].toString() ?? 'N/A';
-        hospitalData!['hospital_address'] = hospitalData!['hospital_address'] ?? 'N/A';
+        hospitalData!['hospital_name'] =
+            hospitalData!['hospital_name'] ?? 'N/A';
+        hospitalData!['hospital_email'] =
+            hospitalData!['hospital_email'] ?? 'N/A';
+        hospitalData!['hospital_contact'] =
+            hospitalData!['hospital_contact'].toString() ?? 'N/A';
+        hospitalData!['hospital_address'] =
+            hospitalData!['hospital_address'] ?? 'N/A';
         hospitalData!['hospital_proof'] = hospitalData!['hospital_proof'] ?? '';
         hospitalData!['hospital_photo'] = hospitalData!['hospital_photo'] ?? '';
 
         // Convert district_id and place_id to String
-        hospitalData!['district_id'] = hospitalData!['district_id']?.toString() ?? '';
-        hospitalData!['place_id'] = hospitalData!['place_id']?.toString() ?? '';
+        districtName =
+            hospitalData!['tbl_place']['tbl_district']['district_name'] ?? '';
+        placeName = hospitalData!['tbl_place']['place_name']?.toString() ?? '';
       });
 
       fetchDistrictName(hospitalData!['district_id']);
@@ -94,12 +102,32 @@ class _HospitalProfileState extends State<HospitalProfile> {
     }
   }
 
+  // Function to create styled buttons
+  Widget _buildButton(
+      {required String label,
+      required IconData icon,
+      required VoidCallback onPressed}) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 20),
+      label: Text(label, style: TextStyle(fontSize: 16)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: Color(0xFF0277BD),
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        elevation: 4,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFFF4F4F4),
       appBar: AppBar(
-        title: Text('Hospital Profile', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text('Hospital Profile',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Color(0xFF0277BD),
         elevation: 4,
       ),
@@ -113,55 +141,95 @@ class _HospitalProfileState extends State<HospitalProfile> {
                   // Left Sidebar Profile Section with Gradient
                   Expanded(
                     flex: 1,
-                    child: FadeInLeft( // Animated Sidebar
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Color(0xFF0277BD), Color(0xFF1976D2)],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
+                    child: FadeInLeft(
+                        // Animated Sidebar
+                        child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF0277BD), Color(0xFF1976D2)],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                        borderRadius: BorderRadius.circular(15),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: Offset(2, 4),
                           ),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        padding: EdgeInsets.all(20),
-                        child: Column(
-                          children: [
-                            CircleAvatar(
-                              radius: 60,
-                              backgroundImage: hospitalData!['hospital_photo']!.isNotEmpty
-                                  ? NetworkImage(hospitalData!['hospital_photo'])
-                                  : AssetImage('assets/default_hospital.png') as ImageProvider,
-                            ),
-                            SizedBox(height: 15),
-                            Text(
-                              hospitalData!['hospital_name'],
-                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
-                              textAlign: TextAlign.center,
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              hospitalData!['hospital_email'],
-                              style: TextStyle(fontSize: 16, color: Colors.white70),
-                              textAlign: TextAlign.center,
-                            ),
-                            SizedBox(height: 20),
-                            ElevatedButton(
-                              onPressed: () {
-                                // Navigate to edit profile page (to be implemented)
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: Color(0xFF0277BD),
-                                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                elevation: 4,
-                              ),
-                              child: Text('Edit Profile', style: TextStyle(fontSize: 16)),
-                            ),
-                          ],
-                        ),
+                        ],
                       ),
-                    ),
+                      padding: EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // Hospital Logo / Image
+                          CircleAvatar(
+                            radius: 80,
+                            backgroundImage: hospitalData!['hospital_photo']!
+                                    .isNotEmpty
+                                ? NetworkImage(hospitalData!['hospital_photo'])
+                                : AssetImage('assets/default_hospital.png')
+                                    as ImageProvider,
+                            backgroundColor: Colors.white,
+                          ),
+                          SizedBox(height: 15),
+
+                          // Hospital Name
+                          Text(
+                            hospitalData!['hospital_name'],
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 5),
+
+                          // Hospital Email
+                          Text(
+                            hospitalData!['hospital_email'],
+                            style:
+                                TextStyle(fontSize: 16, color: Colors.white70),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 20),
+
+                          // Edit Profile & Change Password Buttons
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _buildButton(
+                                label: 'Edit Profile',
+                                icon: Icons.edit,
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            EditprofilePage()),
+                                  );
+                                },
+                              ),
+                              SizedBox(width: 15), // Space between buttons
+                              _buildButton(
+                                label: 'Change Password',
+                                icon: Icons.lock,
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            ChangePasswordPage()),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    )),
                   ),
 
                   SizedBox(width: 20),
@@ -169,21 +237,30 @@ class _HospitalProfileState extends State<HospitalProfile> {
                   // Right Content Section with Animated Cards
                   Expanded(
                     flex: 2,
-                    child: FadeInRight( // Animated Details Section
+                    child: FadeInRight(
+                      // Animated Details Section
                       child: Card(
                         elevation: 4,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15)),
                         child: Padding(
                           padding: const EdgeInsets.all(20),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              buildDetailRow(Icons.phone, 'Contact', hospitalData!['hospital_contact']),
-                              buildDetailRow(Icons.location_on, 'Address', hospitalData!['hospital_address']),
-                              buildDetailRow(Icons.location_city, 'District', districtName),
+                              buildDetailRow(Icons.phone, 'Contact',
+                                  hospitalData!['hospital_contact']),
+                              buildDetailRow(Icons.location_on, 'Address',
+                                  hospitalData!['hospital_address']),
+                              buildDetailRow(Icons.location_city, 'District',
+                                  districtName),
                               buildDetailRow(Icons.place, 'Place', placeName),
-                              buildDetailRow(Icons.lock, 'Password', '********'),
-                              buildDetailRow(Icons.file_copy, 'Proof Document', hospitalData!['hospital_proof']!.isNotEmpty ? 'Uploaded' : 'Not Uploaded'),
+                              buildDetailRow(
+                                  Icons.file_copy,
+                                  'Proof Document',
+                                  hospitalData!['hospital_proof']!.isNotEmpty
+                                      ? 'Uploaded'
+                                      : 'Not Uploaded'),
                               SizedBox(height: 20),
 
                               // Portrait-Style Proof Image
@@ -202,7 +279,8 @@ class _HospitalProfileState extends State<HospitalProfile> {
                                   : Center(
                                       child: Text(
                                         'No Proof Uploaded',
-                                        style: TextStyle(color: Colors.red, fontSize: 16),
+                                        style: TextStyle(
+                                            color: Colors.red, fontSize: 16),
                                       ),
                                     ),
                             ],

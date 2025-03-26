@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hospital/appointment_report.dart';
 import 'package:hospital/departmentselection.dart';
 import 'package:hospital/main.dart';
 
@@ -10,152 +11,30 @@ class CounterStaffDashboard extends StatefulWidget {
 }
 
 class _CounterStaffDashboardState extends State<CounterStaffDashboard> {
-  Map<String, int> _doctorTokens = {}; // Store doctor names and tokens
-
-  List<Map<String, dynamic>> _appointments = []; // Fix the type
-
+  Map<String, int> _doctorTokens = {};
+  List<Map<String, dynamic>> _appointments = [];
   String _selectedDoctorFilter = "All";
-  String _selectedMode = "Online";
-
-  void _confirmAppointment(int index) {
-    final selectedDoctor = _appointments[index]["doctor"];
-    if (selectedDoctor != null) {
-      setState(() {
-        _doctorTokens[selectedDoctor] =
-            (_doctorTokens[selectedDoctor] ?? 0) + 1;
-        final token =
-            "${selectedDoctor.split(' ').last}-${_doctorTokens[selectedDoctor]!.toString().padLeft(3, '0')}";
-        _appointments[index]["status"] = "Confirmed (Token: $token)";
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(
-            "Token generated successfully for ${_appointments[index]['patientName']}"),
-        backgroundColor: Colors.green,
-      ));
-    }
-  }
-
-  void _filterAppointments(String doctor) {
-    setState(() {
-      _selectedDoctorFilter = doctor;
-    });
-  }
-
-  List<Map<String, dynamic>> _getFilteredAppointments() {
-    final filteredByDoctor = _selectedDoctorFilter == "All"
-        ? _appointments
-        : _appointments
-            .where((appointment) =>
-                appointment["tbl_appointment"]["tbl_availability"]["tbl_doctor"]
-                    ["doctor_name"] ==
-                _selectedDoctorFilter)
-            .toList();
-
-    return filteredByDoctor
-        .where((appointment) => appointment["mode"] == _selectedMode)
-        .toList();
-  }
-
-  // void _addAppointment() {
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) {
-  //       final TextEditingController nameController = TextEditingController();
-  //       final TextEditingController doctorController = TextEditingController();
-  //       final TextEditingController dateController = TextEditingController();
-  //       final TextEditingController timeController = TextEditingController();
-  //       final TextEditingController contactController = TextEditingController();
-  //       final TextEditingController reasonController = TextEditingController();
-  //       String mode = "Offline";
-
-        // return AlertDialog(
-        //   title: Text("Add Appointment"),
-        //   // content: SingleChildScrollView(
-        //   //   child: Column(
-        //   //     mainAxisSize: MainAxisSize.min,
-        //   //     children: [
-        //   //       TextField(
-        //   //         controller: nameController,
-        //   //         decoration: InputDecoration(labelText: "Patient Name"),
-        //   //       ),
-        //   //       TextField(
-        //   //         controller: doctorController,
-        //   //         decoration: InputDecoration(labelText: "Doctor"),
-        //   //       ),
-        //   //       TextField(
-        //   //         controller: dateController,
-        //   //         decoration: InputDecoration(labelText: "Date (YYYY-MM-DD)"),
-        //   //       ),
-        //   //       TextField(
-        //   //         controller: timeController,
-        //   //         decoration: InputDecoration(labelText: "Time (HH:MM AM/PM)"),
-        //   //       ),
-        //   //       TextField(
-        //   //         controller: contactController,
-        //   //         decoration: InputDecoration(labelText: "Contact Number"),
-        //   //       ),
-        //   //       TextField(
-        //   //         controller: reasonController,
-        //   //         decoration: InputDecoration(labelText: "Reason"),
-        //   //       ),
-        //   //       // DropdownButton<String>(
-        //   //       //   value: mode,
-        //   //       //   items: [ "Offline"].map((m) {
-        //   //       //     return DropdownMenuItem(
-        //   //       //       value: m,
-        //   //       //       child: Text(m),
-        //   //       //     );
-        //   //       //   }).toList(),
-        //   //       //   onChanged: (value) => setState(() => mode = value!),
-        //   //       // ),
-        //   //     ],
-        //   //   ),
-        //   // ),
-        //   actions: [
-        //     TextButton(
-        //       child: Text("Cancel"),
-        //       onPressed: () => Navigator.of(context).pop(),
-        //     ),
-        //     ElevatedButton(
-        //       child: Text("Add"),
-        //       onPressed: () {
-        //         setState(() {
-        //           _appointments.add({
-        //             "patientName": nameController.text,
-        //             "doctor": doctorController.text,
-        //             "date": dateController.text,
-        //             "time": timeController.text,
-        //             "contact": contactController.text,
-        //             "reason": reasonController.text,
-        //             "status": "Pending",
-        //             "mode": mode,
-        //           });
-        //         });
-        //         Navigator.of(context).pop();
-        //       },
-        //     ),
-        //   ],
-        // );
-  //     },
-  //   );
-  // }
+  Map<String, dynamic> _userDetails = {};
 
   @override
   void initState() {
     super.initState();
-    fetchDoctors(); // Fetch doctors on page load
+    fetchDoctors();
     fetchAppointments();
+    fetchUsers();
   }
 
   Future<void> fetchAppointments() async {
     try {
-      final response = await supabase.from('tbl_appointment').select('*');
-
-      print("Appointments: $response"); // Debugging output
+      final response = await supabase
+    .from('tbl_appointment')
+    .select('*, tbl_availability(*, tbl_doctor(*))')
+    // .eq('appointment_status', 1)
+    .eq('appointment_type', 'ON'); 
+  print(response);
 
       setState(() {
-        _appointments = response; // Store fetched data
+        _appointments = List<Map<String, dynamic>>.from(response);
       });
     } catch (e) {
       debugPrint('Error fetching appointments: $e');
@@ -163,132 +42,180 @@ class _CounterStaffDashboardState extends State<CounterStaffDashboard> {
   }
 
   Future<void> fetchDoctors() async {
-    try {
-      final response =
-          await supabase.from('tbl_doctor').select('doctor_name, doctor_gid, doctor_id');
+  try {
+    final response = await supabase
+        .from('tbl_doctor')
+        .select('doctor_name, doctor_gid, doctor_id');
 
-      print("Doctors: $response"); // Debugging output
-
-      setState(() {
-        _doctorTokens = {
-          for (var doctor in response)
-            "Dr. ${doctor['doctor_name']} (${doctor['doctor_gid']})": 0
-        };
-      });
-    } catch (e) {
-      debugPrint('Error fetching doctors: $e');
-    }
+    setState(() {
+      _doctorTokens = {
+        for (var doctor in response)
+          "Dr. ${doctor['doctor_name'] ?? 'Unknown'} (${doctor['doctor_gid'] ?? 'Unknown'})": 0
+      };
+    });
+  } catch (e) {
+    debugPrint('Error fetching doctors: $e');
   }
+}
+
+
+  Future<void> fetchUsers() async {
+  try {
+    final response = await supabase
+        .from('tbl_user')
+        .select('user_id, user_name, user_contact');
+    setState(() {
+      _userDetails = {
+        for (var user in response)
+          user['user_id']: {
+            'user_name': user['user_name'] ?? 'Unknown',
+            'user_contact': user['user_contact'] ?? 'N/A'
+          }
+      };
+    });
+  } catch (e) {
+    debugPrint('Error fetching users: $e');
+  }
+}
+
+
+  List<Map<String, dynamic>> _getFilteredAppointments() {
+  return _appointments.where((appointment) {
+    final availability = appointment['tbl_availability'];
+    final doctor = availability != null ? availability['tbl_doctor'] : null;
+
+    final doctorName = doctor != null ? doctor['doctor_name'] ?? 'Unknown' : 'Unknown';
+    final doctorGID = doctor != null ? doctor['doctor_gid'] ?? 'Unknown' : 'Unknown';
+
+    final doctorFilter = _selectedDoctorFilter == "All" ||
+        "Dr. $doctorName ($doctorGID)" == _selectedDoctorFilter;
+    return doctorFilter;
+  }).toList();
+}
+
 
   @override
   Widget build(BuildContext context) {
     final filteredAppointments = _getFilteredAppointments();
 
-    return DefaultTabController(
-      length: 2, // Two tabs: Online and Offline
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text("Hospital Counter Dashboard"),
-          backgroundColor: Color(0xFF0277BD),
-          centerTitle: true,
-          bottom: PreferredSize(
-            preferredSize: Size.fromHeight(80), // Extra space for dropdown
-            child: Column(
-              children: [
-                TabBar(
-                  tabs: [
-                    Tab(text: "Online"),
-                    Tab(text: "Offline"),
-                  ],
-                  onTap: (index) {
-                    setState(() {
-                      _selectedMode = index == 0 ? "Online" : "Offline";
-                    });
-                  },
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: DropdownButton<String>(
-                    value: _selectedDoctorFilter,
-                    items: ["All", ..._doctorTokens.keys].map((doctor) {
-                      return DropdownMenuItem<String>(
-                        value: doctor,
-                        child: Text(doctor),
-                      );
-                    }).toList(),
-                    onChanged: (value) => setState(() {
-                      _filterAppointments(value!);
-                    }),
-                    isExpanded: true, // Makes dropdown take full width
-                    underline: Container(), // Removes default underline
-                    icon: Icon(Icons.arrow_drop_down, color: Colors.white),
-                    dropdownColor: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          "Online Appointments Dashboard",
+          style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.blueAccent),
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
+        actions: [
+          OutlinedButton(onPressed: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context) => AppointmentReportPage(),));
+          }, child: Text("Get Report"))
+        ],
+        backgroundColor: Color.fromARGB(255, 254, 255, 255),
+        centerTitle: true,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(15)),
+        ),
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(60), // Reduced height since no tabs
           child: Column(
             children: [
-              Expanded(
-                child: filteredAppointments.isEmpty
-                    ? Center(child: Text("No appointments available."))
-                    : ListView.builder(
-                        itemCount: filteredAppointments.length,
-                        itemBuilder: (context, index) {
-                          final appointment = filteredAppointments[index];
-                          return Card(
-                            elevation: 4,
-                            margin: EdgeInsets.symmetric(vertical: 8),
-                            child: ListTile(
-                              title: Text(
-                                  "Patient: ${appointment['tbl_appointment']['tbl_user']['user_name']}"),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text("Doctor: ${appointment['doctor']}"),
-                                  Text("Date: ${appointment['date']}"),
-                                  Text("Time: ${appointment['time']}"),
-                                  Text("Contact: ${appointment['contact']}"),
-                                  Text("Reason: ${appointment['reason']}"),
-                                ],
-                              ),
-                              trailing: Text(
-                                appointment['status']!,
-                                style: TextStyle(
-                                    color: appointment['status']!
-                                            .contains("Confirmed")
-                                        ? Colors.green
-                                        : Colors.red),
-                              ),
-                              onTap: appointment['status'] == "Pending"
-                                  ? () => _confirmAppointment(index)
-                                  : null,
-                            ),
-                          );
-                        },
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 5,
+                        offset: Offset(0, 2),
                       ),
+                    ],
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _selectedDoctorFilter,
+                      items: ["All", ..._doctorTokens.keys].map((doctor) {
+                        return DropdownMenuItem<String>(
+                          value: doctor,
+                          child: Text(
+                            doctor,
+                            style:
+                                TextStyle(fontSize: 16, color: Colors.black87),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) => setState(() {
+                        _selectedDoctorFilter = value!;
+                      }),
+                      isExpanded: true,
+                      icon:
+                          Icon(Icons.arrow_drop_down, color: Color(0xFF0277BD)),
+                      dropdownColor: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
         ),
-        floatingActionButton: FloatingActionButton(
-          backgroundColor: Color(0xFF0277BD),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    DepartmentSelection(),
-              ),
-            );
-          },
-          child: Icon(Icons.add, color: Colors.white),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Expanded(
+              child: filteredAppointments.isEmpty
+                  ? Center(child: Text("No online appointments available."))
+                  : ListView.builder(
+                      itemCount: filteredAppointments.length,
+                      itemBuilder: (context, index) {
+                        final appointment = filteredAppointments[index];
+                        final user = _userDetails[appointment['user_id']] ?? {};
+                        final doctor =
+                            appointment['tbl_availability']['tbl_doctor'];
+                        final status =
+                            "Confirmed (Token: ${appointment['appointment_token']})";
+                        print("Filtered List: $appointment");
+                        return Card(
+                          elevation: 4,
+                          margin: EdgeInsets.symmetric(vertical: 8),
+                          child: ListTile(
+                            title: Text(
+                                "Patient: ${user['user_name'] ?? 'Unknown'}"),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                    "Doctor: Dr. ${doctor['doctor_name']} (${doctor['doctor_gid']})"),
+                                Text(
+                                    "Date: ${appointment['appointment_date']}"),
+                                Text(
+                                    "Time: ${appointment['tbl_availability']['availability_time']}"),
+                                Text(
+                                    "Contact: ${user['user_contact'] ?? 'N/A'}"),
+                                Text("Mode: Online"),
+                              ],
+                            ),
+                            trailing: Text(
+                              status,
+                              style: TextStyle(color: Colors.green),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
         ),
       ),
+      
     );
   }
 }
